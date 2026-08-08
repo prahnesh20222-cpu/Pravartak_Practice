@@ -249,7 +249,7 @@ Then install:
 ```bash
 pip install -r requirements.txt
 ```
-
+[[requirements.txt]]
 **5. Run it — verify the versions.**
 
 ```bash
@@ -284,6 +284,7 @@ OK · pydantic 2.x.x      ← v2 is what the lab assumes; v1 syntax differs
 3. We *don't* touch `pipeline.py` here — that file doesn't exist in your repo yet. It lands in **Step 2a** as a starter, and we wire `logging_config` + `Settings` into it in **Step 3a**.
 
 **4a. Make the change — create `src/pipeline/logging_config.py`.** The completed module is at `<cohort-repo>/week2/reference/logging_config.py`. The module exposes two things:
+[[logging_config.py]]
 
 - A **`JsonFormatter`** class extending `logging.Formatter`. Its `format(record)` method returns a JSON string with four fields: `ts` (epoch seconds rounded to 3 dp), `level` (the levelname), `msg` (the formatted message), `logger` (the logger name).
 - A **`get_logger(name="pipeline", log_path="logs/pipeline.log")`** function that returns a configured `logging.Logger`. It sets `INFO` level, attaches a `FileHandler` writing to the given path (creating the `logs/` directory if missing), and guards against double-attaching handlers by checking `log.handlers` first.
@@ -299,6 +300,7 @@ Type the module yourself; consult the reference if stuck.
 - The `mkdir(parents=True, exist_ok=True)` creates `logs/` on first run if you forgot.
 
 **4b. Make the change — create `src/pipeline/settings.py`.** The completed module is at `<cohort-repo>/week2/reference/settings.py`. Define a single `Settings` class extending `pydantic.BaseModel` with seven fields:
+[[settings.py]]
 
 | Field | Type | Default | Constraint |
 |---|---|---|---|
@@ -383,6 +385,7 @@ python -c "from src.pipeline.settings import Settings; import json; print(json.d
 2. Confirm `.env` is gitignored (carries over from W1; we re-verify).
 
 **4. Make the check — run the smoke test.**
+Note: When executed in CMD, this returns errors. So ''' is used to wrap the f-strings and double-quotes are avoided.
 
 ```bash
 python -c "
@@ -391,7 +394,7 @@ from src.pipeline.logging_config import get_logger
 
 s = Settings()
 log = get_logger()
-log.info(f'smoke test — settings: {s.model_dump(mode=\"json\")}')
+log.info(f'''smoke test — settings: {s.model_dump(mode='json')}''')
 print('OK — settings constructed, log line written')
 "
 ```
@@ -400,6 +403,8 @@ print('OK — settings constructed, log line written')
 
 ```bash
 cat logs/pipeline.log
+or in windows
+type logs\pipeline.log
 ```
 
 **6. What you should see.**
@@ -420,6 +425,19 @@ git ls-files | grep -q "^\.env$" && echo "PROBLEM: .env tracked" || echo "OK: .e
 ```
 
 You should see `OK: .env not tracked`. If you see `PROBLEM`, run `git rm --cached .env && git commit -m "chore: stop tracking .env"`.
+- **`grep -q "^\.env$" .gitignore`**: Searches your `.gitignore` file silently (`-q`) for a line that matches exactly `.env` from start (`^`) to finish (`$`).
+- **`||` (OR operator)**: This acts as a conditional gate. The command on the right will _only_ run if the command on the left fails (i.e., returns a non-zero exit status because the text was not found).
+- **`echo ".env" >> .gitignore`**: Appends the text `.env` as a new line to the bottom of your `.gitignore` file.
+- **The Result**: If `.env` is already listed in your ignore file, it does nothing. If it is missing, it automatically adds it to prevent future tracking. [[1](https://github.com/orgs/community/discussions/189770), [2](https://devactivity.com/insights/securing-your-secrets-mastering-gitignore-for-enhanced-developer-statistics/)]
+- - **`git ls-files`**: Lists every single file currently tracked in your local Git repository's staging index.
+- **`| grep -q "^\.env$"`**: Pipes that list into a silent search to see if the specific file `.env` is among those being tracked.
+- **`&&` (AND operator)**: This code block executes _only_ if the previous `grep` search succeeded (found a match). It prints a warning to your screen: **`PROBLEM: .env tracked`**.
+- **`||` (OR operator)**: This code block executes _only_ if the `grep` search failed (no match found). It prints a confirmation message: **`OK: .env not tracked`**.
+- **The Result**: It gives you instant visual feedback on whether your secrets have already slipped past Git’s defenses. [[1](https://labex.io/tutorials/git-how-to-check-if-a-file-is-tracked-by-git-560032)]
+
+---
+
+---
 
 **Watch for.**
 
