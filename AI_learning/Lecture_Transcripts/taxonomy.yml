@@ -1,0 +1,26 @@
+taxonomy:
+  python:
+    children:
+      asyncio:
+        aliases:
+          - async-python
+          - asynchronous-python
+
+      pydantic:
+        aliases:
+          - pydantic-models
+
+  rag:
+    children:
+      embeddings:
+        aliases:
+          - embedding
+
+      vector-database:
+        aliases:
+          - vector-db
+          - vector-store
+
+      retrieval:
+        aliases:
+          - information-retrieval
