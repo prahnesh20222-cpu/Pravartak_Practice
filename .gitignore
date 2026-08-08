@@ -217,3 +217,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Ignore local user workspace state and open tabs (Changes constantly)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+
+# Ignore local graph view positioning cache
+.obsidian/graph.json
+
+# Ignore VS Code configuration directory
+.vscode/
