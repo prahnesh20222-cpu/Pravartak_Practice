@@ -1,0 +1,13 @@
+document_id: programme_orientation_20260407
+source_file: 20260407-Programme Orientation-TRANSCRIPT.txt
+source_type: zoom_transcript
+session_type: programme_orientation
+course: Advanced Certificate Programme in Agentic AI and RAG Engineering
+session_date: 2026-04-07
+language: en
+technical_depth: low_to_medium
+rag_ready: true
+chunking_strategy: topic_based_with_timestamp_provenance
+speaker_names_preserved: true
+transcript_cleaned: true
+source: "[Read Transcript](<archive/20260407-Programme Orientation-TRANSCRIPT.txt>)"

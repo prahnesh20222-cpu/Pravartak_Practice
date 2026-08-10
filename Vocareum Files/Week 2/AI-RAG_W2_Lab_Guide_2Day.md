@@ -1,3 +1,16 @@
+---
+document_id: W2_Lab_Guide_2Day
+source_file: 
+source_type: vocareum_file
+session_type: live_session
+course: Advanced Certificate Programme in Agentic AI and RAG Engineering
+session_date: 2026-01-08
+language: en
+technical_depth: low_to_medium
+rag_ready: true
+chunking_strategy: 
+source: vocareum
+---
 # Week 2 Lab — Async Batch Pipeline
 
 **Programme:** Agentic AI & RAG Engineering

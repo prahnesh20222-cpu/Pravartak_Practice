@@ -1,0 +1,21 @@
+---
+chunk_id: week2_007
+topic: Retry with exponential backoff
+
+tags:
+  - asyncio
+  - retry
+  - exponential-backoff
+
+relations:
+  - type: discusses
+    target_type: glossary_term
+    target_id: retry
+
+  - type: implements
+    target_type: code
+    target_id: src/pipeline/pipeline.py#ask_llm_with_retry
+
+timestamp_start: "00:42:15"
+timestamp_end: "00:48:30"
+---
