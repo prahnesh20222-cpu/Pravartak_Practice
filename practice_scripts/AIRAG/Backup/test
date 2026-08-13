@@ -1,0 +1,6 @@
+POST Function (10 where condition )
+/download
+def down()
+    Query to run on DB
+    create a a file in a specific path with specifi name in your server
+    FILE Reponse - pointo the the path of created fiel
