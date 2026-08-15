@@ -1,0 +1,191 @@
+{
+	"openapi": "3.1.0",
+	"info": {
+		"title": "My FastAPI Application",
+		"description": "This is a sample FastAPI application.",
+		"version": "1.0.0"
+	},
+	"paths": {
+		"/first_endpoint": {
+			"get": {
+				"summary": "First Endpoint",
+				"operationId": "first_endpoint_first_endpoint_get",
+				"responses": {
+					"200": {
+						"description": "Successful Response",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/user/registration": {
+			"post": {
+				"summary": "Register User",
+				"operationId": "register_user_user_registration_post",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/User"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "Successful Response",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HTTPValidationError"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/streaming": {
+			"post": {
+				"summary": "Get Streaming Response",
+				"operationId": "get_streaming_response_streaming_post",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Question"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "Successful Response",
+						"content": {
+							"application/json": {
+								"schema": {}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/HTTPValidationError"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"schemas": {
+			"HTTPValidationError": {
+				"properties": {
+					"detail": {
+						"items": {
+							"$ref": "#/components/schemas/ValidationError"
+						},
+						"type": "array",
+						"title": "Detail"
+					}
+				},
+				"type": "object",
+				"title": "HTTPValidationError"
+			},
+			"Question": {
+				"properties": {
+					"question": {
+						"type": "string",
+						"title": "Question"
+					}
+				},
+				"type": "object",
+				"required": [
+					"question"
+				],
+				"title": "Question"
+			},
+			"User": {
+				"properties": {
+					"username": {
+						"type": "string",
+						"title": "Username"
+					},
+					"email": {
+						"type": "string",
+						"title": "Email"
+					},
+					"age": {
+						"type": "integer",
+						"title": "Age"
+					}
+				},
+				"type": "object",
+				"required": [
+					"username",
+					"email",
+					"age"
+				],
+				"title": "User"
+			},
+			"ValidationError": {
+				"properties": {
+					"loc": {
+						"items": {
+							"anyOf": [
+								{
+									"type": "string"
+								},
+								{
+									"type": "integer"
+								}
+							]
+						},
+						"type": "array",
+						"title": "Location"
+					},
+					"msg": {
+						"type": "string",
+						"title": "Message"
+					},
+					"type": {
+						"type": "string",
+						"title": "Error Type"
+					},
+					"input": {
+						"title": "Input"
+					},
+					"ctx": {
+						"type": "object",
+						"title": "Context"
+					}
+				},
+				"type": "object",
+				"required": [
+					"loc",
+					"msg",
+					"type"
+				],
+				"title": "ValidationError"
+			}
+		}
+	}
+}

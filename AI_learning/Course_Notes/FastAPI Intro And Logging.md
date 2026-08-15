@@ -101,7 +101,48 @@ imple_example2:
   ```  
 - The output from the POST call returns a value as shown below
   ![[Pasted image 20260814221758.png]]
-## **Logging**
+- **Note**: FastAPI's /docs endpoint is an automatically generated **Swagger UI** interface for the APIs that are created in the app..
+	- This is accessible in the browser from http://localhost:8000/docs
+	- See all registered endpoints
+	- See whether they are `GET`, `POST`, etc.
+	- See the expected request parameters/body
+	- See the Pydantic models and their fields
+	- Enter request data
+	- Execute the API
+	- See the HTTP status code
+	- See the response body
+- The screenshot below gives an example of the successful GET call
+  ![[Pasted image 20260815114351.png]]
+  - Another endpoint called **/redoc** is available that is useful for sharing the API documentation. The API document can be downloaded as json file. Refer [[streaming_fastapi_main.json]]
+## Streaming Response
+- The streaming response is a way to handle situations when the response data is huge. It can be computationally expensive leading to latency.
+- Instead of returning the entire data, the streaming response method will stream user defined chunks of data.
+- The following code snippet shows how a streaming endpoint can be set up
+  ```
+  '''
+Import this module for implementing streaming response in fastapi.
+'''
+from fastapi.responses import StreamingResponse
+class Question(BaseModel):
+    question: str
+'''this is a mockup function to simulate streaming response.'''
+async def streaming_answer(question : Question):
+    answer = '''
+    Arthur kept a tiny clock shop on a cobblestone street.'''
+    for word in answer.split(" "):
+        yield word + " "
+        await asyncio.sleep(0.5)  # Simulate delay for streaming effect
+@app.post("/streaming")
+async def get_streaming_response(question: Question):
+    return StreamingResponse(streaming_answer(question),
+                             media_type="text/event-stream"
+                             )
+  ```
+- **Note** Postman is not useful for testing streaming response. This use case must be tested with CURL command in the terminal.  This command to be used to test this endpoint is shown below.
+  ```
+  curl -X 'POST' \ 'http://localhost:8000/streaming' \ -H 'accept: application/json' \ -H 'Content-Type: application/json' \ -d '{ "question": "What is this story?" }'
+  ```
+## Logging
 - The most common log module is the native python module named **logging**
 - A simple logging setup requires the following.
 	- A logging class. This is usually inherited from **logging.Formatter**
@@ -151,5 +192,6 @@ imple_example2:
 2. Do we need the uvicorn all the time?
 3. Do we have to configure the response for all the http response codes?
 4. For each execution, how do we create a jobid? When we are calling different functions and tool calls, how do we create a separate trace for each of those?
-- How do we use a "streaming response"? How do we use YIELD?
-- Can we use async.gather and along with yield?
+5. Can we use async.gather and along with yield?
+6. Can we pass a body only with a POST endpoint? What is the best approach?
+7. What is the protocol called **QUERY**? It is supposed to be a combination of GET and POST
