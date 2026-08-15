@@ -151,4 +151,5 @@ imple_example2:
 2. Do we need the uvicorn all the time?
 3. Do we have to configure the response for all the http response codes?
 4. For each execution, how do we create a jobid? When we are calling different functions and tool calls, how do we create a separate trace for each of those?
-- 
+- How do we use a "streaming response"? How do we use YIELD?
+- Can we use async.gather and along with yield?
