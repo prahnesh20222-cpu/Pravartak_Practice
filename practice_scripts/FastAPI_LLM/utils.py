@@ -22,6 +22,6 @@ async def call_openai(user_query):
             {"role": "user",   "content": user_query},
         ]
         )
-    print(response)
+    print(response.choices[0].message.content)
 
     
