@@ -3,6 +3,7 @@ import asyncio
 question = "Hello"
 
 async def main():
-    await ut.call_openai(question)
+    response = await ut.call_openai(question)
+    print(response)
 
 asyncio.run(main())
