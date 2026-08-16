@@ -12,12 +12,12 @@ client = AsyncOpenAI(
 
 )
 
-async def call_openai(user_query : str,temperature :float = my_settings.OPEN_AI_TEMPERATURE) -> dict:
+async def call_openai(user_query : str,temperature :float = my_settings.OPEN_AI_TEMPERATURE, retires: int = my_settings.OPEN_AI_RETRIES, timeout : int = my_settings.OPEN_AI_TIMEOUT) -> dict:
     '''
     if we don't import AsyncOpenAI, we can't make this async on client.chat.completions.create
     OpenAI by itself does not support async
     '''
-    for attempt in range(my_settings.OPEN_AI_RETRIES): #values 0,1,2
+    for attempt in range(retires): #values 0,1,2
         try:
             start_time = time.perf_counter()
             response = await client.chat.completions.create(model="gpt-4o-mini",
@@ -25,7 +25,7 @@ async def call_openai(user_query : str,temperature :float = my_settings.OPEN_AI_
                                                                       {"role": "user",   "content": user_query},
         ],
         temperature=temperature,
-        timeout=60 #if response takes >=60s will it retry?
+        timeout=timeout #if response takes >=60s will it retry?
         )
             end_time = time.perf_counter()     
             final_response = {
@@ -42,7 +42,7 @@ async def call_openai(user_query : str,temperature :float = my_settings.OPEN_AI_
             end_time = time.perf_counter() # this is needed to know how long it takes when it hits exception block
             time_taken = round(end_time - start_time, 3)
             print(time_taken)
-            if attempt == my_settings.OPEN_AI_RETRIES -1: # this will be the last value in the range which is 2 or last retry
+            if attempt == retires -1: # this will be the last value in the range which is 2 or last retry
                 raise e
             await asyncio.sleep(2) # after every failed attempt wait for 2 seconds
 

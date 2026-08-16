@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     OPENAI_BASE_URL: str = "https://openai.vocareum.com/v1"
     OPEN_AI_RETRIES: int
     OPEN_AI_TEMPERATURE: float
+    OPEN_AI_TIMEOUT: int
     model_config = SettingsConfigDict(
         env_file = ".env",
         
