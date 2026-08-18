@@ -1,6 +1,5 @@
-'''
-All reusable functions and utilities will be set up here
-'''
+#All reusable functions and utilities will be set up here
+
 from openai import AsyncOpenAI
 from settings import my_settings
 import asyncio
