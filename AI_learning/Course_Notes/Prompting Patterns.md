@@ -15,6 +15,7 @@ source:
 additional_reading:
 impl_example1:
 imple_example2:
+topics: structured, Few-shot, tool-aware
 ---
 - Apps like chat GPT do not have a way to configure system and user context separately. We put everything together.
 - When we make an api call, we can separate them and each of those can be structured in one of the following ways show below.

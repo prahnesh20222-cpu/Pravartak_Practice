@@ -45,5 +45,23 @@ async def call_openai(user_query : str,temperature :float = my_settings.OPEN_AI_
                 raise e
             await asyncio.sleep(2) # after every failed attempt wait for 2 seconds
 
+import httpx
+async def calculate_interest(principal:float, rate:float, time:float) -> dict:
+    interest = (principal*rate*time)/100
+    total_repayable = principal+interest
+    return {
+        "interest": round(interest, 2),
+        "total_amount": round(total_repayable, 2)
+    }
 
+async def fetch_stock_date(symbol:str, interval:str="5min", apikey:str = 'demo' ) -> dict:
+    url = "https://www.alphavantage.co/query"
+    params = {
+        "function": "TIME_SERIES_INTADAY",
+        "symbol": symbol,
+        "interval": interval,
+        "apikey": apikey,
+    }
+    response = httpx.get(url, params=params, timeout=30)
+    return response.json()
     

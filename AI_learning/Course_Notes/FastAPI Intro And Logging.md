@@ -15,6 +15,7 @@ source:
 additional_reading:
 impl_example1:
 imple_example2:
+topics: FastAPI, logging, streaming_response, swagger
 ---
 ## ** API basics**
 - FastAPI is a convenient python library that to build API endpoints
@@ -143,6 +144,15 @@ async def get_streaming_response(question: Question):
   curl -X 'POST' \ 'http://localhost:8000/streaming' \ -H 'accept: application/json' \ -H 'Content-Type: application/json' \ -d '{ "question": "What is this story?" }'
   ```
 ## Logging
+---
+section_id: 
+topic: logging
+speaker: user
+session_type: live_session
+implemented_by: [[my_logging.py]]
+
+---
+
 - The most common log module is the native python module named **logging**
 - A simple logging setup requires the following.
 	- A logging class. This is usually inherited from **logging.Formatter**

@@ -47,4 +47,9 @@ async def chat(payload: imput_structure) -> out_structure:
         return output
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    #uvicorn.run(app, host="0.0.0.0", port=8000)
+    """
+    Instead of executing uvicorn.run() directly inside main.py, launch the app from CMD using the Uvicorn Command Line Interface.
+    This lets the Uvicorn process manager cleanly handle process signals and terminal interrupts:
+    """
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)

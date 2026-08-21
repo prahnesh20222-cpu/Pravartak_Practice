@@ -15,6 +15,7 @@ source:
 additional_reading: "[Async_dan_realpython](<Personal_Reading/Async_dan_realpython.pdf>)"
 impl_example1:
 imple_example2:
+topics: Async, AsyncIO
 ---
 # Asynchronous flow
 - When multiple users are querying a database concurrently, all these requests can get accumulated. At some point, this could block transactions from some users until the pending tasks are completed. This situation is overcome by the use of an asynchronous logic.
