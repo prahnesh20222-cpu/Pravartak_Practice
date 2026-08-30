@@ -126,6 +126,8 @@ The __init__.py files turn the directories into proper Python packages so import
 - 5. Run it.
 
 pip list | grep -E "fastapi|uvicorn|streamlit|pytest"
+CMD equivalent command is 
+pip list | findstr /R /C:"fastapi" /C:"uvicorn" /C:"streamlit" /C:"pytest"
 
 - 6. What you should see.
 
@@ -203,6 +205,7 @@ Completed shape: api/main_reference.py.
 - 5. Run it.
 
 uvicorn api.main:app --reload --port 8000
+**From CMD, run : python -m uvicorn api.main:app --reload --port 8000**
 
 - 6. What you should see.
 
