@@ -1,11 +1,12 @@
 ---
-document_id: document-corpus-strategy
+document_id: document-corpus-strategy_v1
 document_type: architecture-guidance
 source_type: derived-from-design-discussion
 language: en
 rag_ready: true
 chunking_strategy: topic_based
 metadata_strategy: controlled_taxonomy_plus_typed_relations
+additional_reading: [[document_corpus_strategy_v2]]
 ---
 
 # Document Corpus Strategy for RAG

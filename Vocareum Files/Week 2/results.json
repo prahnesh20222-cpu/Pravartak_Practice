@@ -1,0 +1,134 @@
+{
+  "summary": {
+    "started_at": 1788051978.6637394,
+    "elapsed_seconds": 6.084341287612915,
+    "n_questions": 20,
+    "n_succeeded": 20,
+    "n_retries_total": 0,
+    "total_cost_usd": 0.002,
+    "fail_rate": 0.0,
+    "use_fake": true
+  },
+  "answers": [
+    {
+      "question": "What is retrieval-augmented generation in one sentence?",
+      "text": "A retriever takes a user query, finds the most relevant chunks in the vector store, and passes them to the LLM as grounding context.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "Name three real-world uses of vector databases.",
+      "text": "Vector databases power semantic search, RAG context retrieval, and recommendation systems by storing high-dimensional embeddings of text.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "Why might an LLM produce confident but incorrect answers?",
+      "text": "(simulated answer) A grounded, concise response to: Why might an LLM produce confident but incorrect answers?",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "What is a Pydantic BaseModel and when would you use one?",
+      "text": "Pydantic gives you typed Python classes that validate data at runtime \u2014 ideal for checking LLM outputs match the shape your code expects.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "Explain async and await in plain language.",
+      "text": "Async Python lets one program work on many I/O-bound tasks at once: while awaiting a network call, the event loop runs other tasks instead of blocking.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "What is the difference between a chatbot and an agent?",
+      "text": "An agent is a loop that uses an LLM to decide what to do next \u2014 often combining tools, memory, and multi-step planning.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "List three common chunking strategies for documents.",
+      "text": "Chunking splits long documents into smaller passages so each one fits in the LLM's context and retrieval can return only the relevant pieces.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "Why do we use exponential backoff for retries?",
+      "text": "Exponential backoff doubles the wait between retries so a flaky API has time to recover and you don't hammer it with rapid-fire requests.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "Give a one-line definition of an embedding.",
+      "text": "An embedding is a fixed-length vector representation of text whose geometric distance correlates with semantic similarity.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "When would you choose fine-tuning over RAG?",
+      "text": "RAG combines retrieval over a document corpus with an LLM, so answers are grounded in your source material rather than the model's training data.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "What is the role of a system prompt?",
+      "text": "A system prompt sets the model's role, style, and guardrails before it sees any user message \u2014 like a job description for the conversation.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "Explain what asyncio.gather does in one sentence.",
+      "text": "Async Python lets one program work on many I/O-bound tasks at once: while awaiting a network call, the event loop runs other tasks instead of blocking.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "What is the purpose of a .env file?",
+      "text": "A .env file holds environment variables (like API keys) for local development. Load it with python-dotenv and never commit it \u2014 keep .env in .gitignore.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "Why is structured logging useful for AI systems?",
+      "text": "Structured logs emit one JSON record per event so they can be filtered, aggregated, and fed into dashboards without regex parsing.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "Name two trade-offs of long-context prompting.",
+      "text": "Long-context prompting trades cost and latency for simplicity: it works for small, self-contained content but doesn't scale to large or growing corpora.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "What is the role of a retriever in a RAG pipeline?",
+      "text": "RAG combines retrieval over a document corpus with an LLM, so answers are grounded in your source material rather than the model's training data.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "Give one example of when NOT to use an LLM.",
+      "text": "(simulated answer) A grounded, concise response to: Give one example of when NOT to use an LLM.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "What does temperature do in an LLM call?",
+      "text": "Temperature controls randomness in the LLM's output: lower values are more focused and repeatable, higher values are more creative.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "What is the difference between sync and async I/O?",
+      "text": "Async Python lets one program work on many I/O-bound tasks at once: while awaiting a network call, the event loop runs other tasks instead of blocking.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    },
+    {
+      "question": "What is the difference between batching and streaming?",
+      "text": "Streaming returns tokens as the model generates them; batching collects items and processes them together \u2014 streaming optimises perceived latency, batching optimises throughput.",
+      "cost_usd": 0.0001,
+      "retries": 0
+    }
+  ]
+}

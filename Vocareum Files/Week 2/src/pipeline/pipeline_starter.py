@@ -24,45 +24,50 @@ import logging
 import time
 
 # Live-session stand-in. Same Pydantic shape as the real call.
-from fake_llm import Question, Answer, fake_ask_llm, FakeLLMError
+from .fake_llm import Question, Answer, fake_ask_llm, FakeLLMError
 
 
 # ---------- Step 2: one async call ----------
 async def ask_llm(q: Question, fail_rate: float = 0.0) -> Answer:
     """One call. Live demo: fake. Lab: real AsyncOpenAI (same signature)."""
     # TODO (Step 2): return await fake_ask_llm(q, fail_rate=fail_rate)
+    return await fake_ask_llm(q, fail_rate=fail_rate)
     # TODO (Step 5): once logging is configured, also log here, e.g.
     #                log.info(f"asked: {q.text[:40]}")
-    raise NotImplementedError("Step 2 — call fake_ask_llm and return the Answer")
+    #raise NotImplementedError("Step 2 — call fake_ask_llm and return the Answer")
 
 
 # ---------- Step 3: retry with exponential backoff ----------
 async def ask_llm_with_retry(
     q: Question, tries: int = 3, fail_rate: float = 0.0
 ) -> Answer:
+
     """Retry up to ``tries`` times. Wait 1 s, 2 s, 4 s between attempts."""
     # TODO (Step 3):
-    #   for attempt in range(tries):
-    #       try:
-    #           ans = await ask_llm(q, fail_rate=fail_rate)
-    #           ans.retries = attempt
-    #           return ans
-    #       except Exception:
-    #           if attempt == tries - 1:
-    #               raise
-    #           await asyncio.sleep(2 ** attempt)
-    raise NotImplementedError("Step 3 — wrap ask_llm with retry + exponential backoff")
+    for attempt in range(tries):
+        try:
+            ans = await ask_llm(q, fail_rate=fail_rate)
+            ans.retries = attempt
+            return ans
+        except Exception:
+            if attempt == tries - 1:
+                raise
+            await asyncio.sleep(2 ** attempt)
+    #raise NotImplementedError("Step 3 — wrap ask_llm with retry + exponential backoff")
+    raise RuntimeError("Unreachable")
 
 
 # ---------- Step 4: gather it all together ----------
 async def run_batch(
     questions: list[Question], fail_rate: float = 0.0
 ) -> list[Answer]:
+
     """Fire all questions in parallel via ``asyncio.gather``."""
     # TODO (Step 4):
-    #   tasks = [ask_llm_with_retry(q, fail_rate=fail_rate) for q in questions]
-    #   return await asyncio.gather(*tasks)
-    raise NotImplementedError("Step 4 — build the tasks list and gather them")
+    tasks = [ask_llm_with_retry(q, fail_rate=fail_rate) for q in questions]
+    #These are coroutine *objects* — they're not running yet.
+    return await asyncio.gather(*tasks)
+    #raise NotImplementedError("Step 4 — build the tasks list and gather them")
 
 
 # ---------- Step 5: structured (JSON) logging ----------

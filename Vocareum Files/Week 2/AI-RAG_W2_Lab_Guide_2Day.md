@@ -376,7 +376,7 @@ python -c "from src.pipeline.settings import Settings; import json; print(json.d
 }
 ```
 
-**7b. What just happened.** No arguments → all defaults → all constraints satisfied → a typed object whose fields we know match their declared types. The `model_dump(mode='json')` call serialises `Path` objects back to strings so the output is JSON-friendly. Every `Settings()` call with no arguments will produce exactly this shape — same defaults, every run.
+**7b. What just happened.** No arguments → all defaults → all constraints satisfied → a typed object whose fields we know match their declared types. **The `model_dump(mode='json')` call serialises `Path` objects back to strings so the output is JSON-friendly.** Every `Settings()` call with no arguments will produce exactly this shape — same defaults, every run.
 
 **Watch for.**
 
@@ -652,7 +652,7 @@ Bonus: if you wait the few seconds the lossy run takes to complete, you'll *feel
 
 **4. Make the change.** Find `run_batch` in `src/pipeline/pipeline.py` and replace its body. The completed reference is at `<cohort-repo>/week2/reference/pipeline_reference.py`. Two lines:
 
-- Build a list comprehension `tasks = [ask_llm_with_retry(q, fail_rate=fail_rate) for q in questions]`. These are coroutine *objects* — they're not running yet.
+- Build a list comprehension `tasks = [ask_llm_with_retry(q, fail_rate=fail_rate) for q in questions]`. **These are coroutine *objects* — they're not running yet.**
 - `return await asyncio.gather(*tasks)`. The `*tasks` unpacks the list as positional arguments because `gather` takes one task per argument, not a list. The `await` returns when *all of them* are done; results are returned in input order.
 
 **Reading the body line by line:**
@@ -691,7 +691,7 @@ wall-clock: 1.4s                                           ← all 3 parallel, ~
 - LLMs hallucinate when they produce confident text...
 ```
 
-**7. What just happened.** Three calls. Each one takes ~0.3–1.5 s on the fake. **Sequentially**, that'd be ~3 s. **In parallel** via `gather`, it's ~1.4 s — bounded by the *slowest single call*, not the sum. The order of the answers matches the input order even though the calls almost certainly didn't *finish* in input order. That's `gather`'s guarantee: parallel execution, ordered results. This one-line abstraction is doing the heavy concurrency lifting for the rest of the lab.
+**7. What just happened.** Three calls. Each one takes ~0.3–1.5 s on the fake. **Sequentially**, that'd be ~3 s. **In parallel** via `gather`, it's ~1.4 s — bounded by the *slowest single call*, not the sum. **The order of the answers matches the input order even though the calls almost certainly didn't *finish* in input order. That's `gather`'s guarantee: parallel execution, ordered results.** This one-line abstraction is doing the heavy concurrency lifting for the rest of the lab.
 
 **Watch for.**
 
@@ -1022,7 +1022,7 @@ tail -n 30 logs/pipeline.log
 
 ### Step 3d — Author your second Pydantic model — `RunSummary` · 💻 Self-paced · 13 min
 
-**1. What we're doing & why.** Where `Settings` captured *config* (the same every run), `RunSummary` captures *runtime data* (different every run): how long the run took, how many retries happened, what the cost was. This is your second authored Pydantic model. It's the seed of the KPI scoreboard we build from W6 onward — every run gets a one-row summary, persisted to a `runs` table next.
+**1. What we're doing & why.** Where `Settings` captured *config* (the same every run), `RunSummary` captures *runtime data* (different every run): how long the run took, how many retries happened, what the cost was. This is your second authored Pydantic model. **It's the seed of the KPI scoreboard we build from W6 onward** — every run gets a one-row summary, persisted to a `runs` table next.
 
 **2. Where we are now.** Your `settings.py` has just one class — `Settings`. Your `pipeline.py` runs and prints, but doesn't produce any structured artefact summarising the run.
 
@@ -1033,16 +1033,16 @@ tail -n 30 logs/pipeline.log
 
 **4a. Make the change — append a `RunSummary` class to `src/pipeline/settings.py`** (after the existing `Settings` class). Reference: `<cohort-repo>/week2/reference/settings.py`. Eight fields:
 
-| Field | Type | Constraint |
-|---|---|---|
-| `started_at` | `float` | — (unix timestamp from `time.time()`) |
-| `elapsed_seconds` | `float` | `Field(ge=0.0)` — non-negative |
-| `n_questions` | `int` | `Field(ge=0)` |
-| `n_succeeded` | `int` | `Field(ge=0)` |
-| `n_retries_total` | `int` | `Field(ge=0)` |
-| `total_cost_usd` | `float` | `Field(ge=0.0)` |
-| `fail_rate` | `float` | `Field(ge=0.0, le=1.0)` |
-| `use_fake` | `bool` | — |
+| Field             | Type    | Constraint                            |
+| ----------------- | ------- | ------------------------------------- |
+| `started_at`      | `float` | — (unix timestamp from `time.time()`) |
+| `elapsed_seconds` | `float` | `Field(ge=0.0)` — non-negative        |
+| `n_questions`     | `int`   | `Field(ge=0)`                         |
+| `n_succeeded`     | `int`   | `Field(ge=0)`                         |
+| `n_retries_total` | `int`   | `Field(ge=0)`                         |
+| `total_cost_usd`  | `float` | `Field(ge=0.0)`                       |
+| `fail_rate`       | `float` | `Field(ge=0.0, le=1.0)`               |
+| `use_fake`        | `bool`  | —                                     |
 
 The constraints aren't decorative — `Field(ge=0)` on `n_retries_total` means if you sum the wrong field and end up negative, Pydantic refuses to construct.
 
@@ -1221,13 +1221,14 @@ python -c "import json; print(json.load(open('results.json'))['summary'])"
 ```
 
 **7b. What just happened.** This is the **single most important moment of W2** for understanding the retry pattern. With `fail_rate=0.3`, ~30% of fake calls raise `FakeLLMError`. Your retry wrapper caught each failure, slept 1 second (`2 ** 0`), retried — if it still failed, slept 2 seconds (`2 ** 1`), retried again. The log shows that backoff *visibly* — look at the timestamp deltas between the `retry 1` and `retry 2` lines. The whole pipeline took ~6.8 s instead of ~4.4 s (the retries cost wall-clock time), but every answer still came through. `n_retries_total: 3` in the summary captures this honestly — it's the data we'll feed into reliability metrics from W6.
+**NOTE**: i tried by  adding  **return_exceptions=True** to the run_in_batches function based on error resolution provided by Gemini. i reverted by setting the fail_rate to 0.2 as explained below
 
 **Restore `fail_rate=0.0`** in `settings.py` before moving on.
 
 **Watch for.**
 
-- `n_retries_total` is 0 even with `fail_rate=0.3` → randomness; run again, you'll see retries on most runs.
-- Pipeline crashes with `FakeLLMError` after retries → fail rate is too high; 0.3 × 0.3 × 0.3 ≈ 3% chance of three misses in a row. Drop the rate to 0.2 or up `tries` to 5.
+- `n_retries_total` is 0 even with `fail_rate=0.3` → randomness; run again, you'll see retries on most runs. 
+- Pipeline crashes with `FakeLLMError` after retries → fail rate is too high; 0.3 × 0.3 × 0.3 ≈ 3% chance of three misses in a row. Drop the rate to 0.2 or up `tries` to 5.**I had to make this change**
 - `KeyError: 'summary'` when reading `results.json` → an exception interrupted the write; check the log for the first `ERROR`.
 
 ---

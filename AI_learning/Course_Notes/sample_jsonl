@@ -1,0 +1,13 @@
+{"id" : "g001",
+"question":"In USA what is the medical insurance premium contribution from company side?",
+"ideal_answer":"In the United States, medical insurance is provided through Blue Cross Blue Shield PPO. The compar
+"notes":"In the United States, medical insurance is provided through Blue Cross Blue Shield PPO. The company pays 75%
+"level":"happy_path"
+},
+{
+"id" : "g002",
+"question":"I heard dental insurance covering 90% of premium, does medical insurance also converd 100s? or anythirg
+"ideal_answer":"",
+"notes":"",
+"level":"hard_path"
+},
