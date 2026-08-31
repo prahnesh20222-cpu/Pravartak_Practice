@@ -1,0 +1,10 @@
+What is retrieval-augmented generation in one sentence?
+Name three real-world uses of vector databases.
+Why might an LLM produce confident but incorrect answers?
+What is a Pydantic BaseModel and when would you use one?
+Explain async and await in plain language.
+What is the difference between a chatbot and an agent?
+List three common chunking strategies for documents.
+Why do we use exponential backoff for retries?
+Give a one-line definition of an embedding.
+When would you choose fine-tuning over RAG?
