@@ -27,7 +27,8 @@ def _make_client(settings):
             base_url="http://localhost:11434/v1",
             api_key="ollama",  # any string — Ollama doesn't check it
         )
-    return AsyncOpenAI(api_key=settings.openai_api_key)
+    return AsyncOpenAI(base_url=settings.openai_base_url,
+        api_key=settings.openai_api_key,)
 
 
 # ─── Tool schema for structured outputs ─────────────────────────────────────
@@ -89,24 +90,49 @@ async def ask_llm(q: Question, settings: Settings | None = None) -> Answer:
     last_err: Exception | None = None
     for attempt in range(settings.max_retries + 1):
         try:
-            resp = await client.chat.completions.create(
-                model=settings.model,
-                messages=[{"role": "user", "content": q.question}],
-                tools=[ANSWER_TOOL],
-                tool_choice={
-                    "type": "function",
-                    "function": {"name": "answer_question"},
-                },
+            is_local = (settings.model.startswith("llama")
+            or settings.model.startswith("ollama:")
             )
 
+            if is_local:
+                resp = await client.chat.completions.create(
+                    model=settings.model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "Return ONLY valid JSON with exactly these fields: "
+                                "content (string), confidence (number from 0 to 1), "
+                                "sources (array of strings)."
+                            ),
+                        },
+                        {"role": "user", "content": q.question},
+                    ],
+                    response_format={"type": "json_object"},
+                )
+
+                args = json.loads(resp.choices[0].message.content)
+
+            else:
+                resp = await client.chat.completions.create(
+                    model=settings.model,
+                    messages=[{"role": "user", "content": q.question}],
+                    tools=[ANSWER_TOOL],
+                    tool_choice={
+                        "type": "function",
+                        "function": {"name": "answer_question"},
+                    },
+                )
+
+
             # Parse the tool call's structured arguments.
-            tool_calls = resp.choices[0].message.tool_calls or []
-            if not tool_calls:
-                # Defensive — should not happen because tool_choice forces it,
-                # but if a provider misbehaves we want a clear error.
-                raise RuntimeError("LLM did not call the answer_question tool")
-            args_json = tool_calls[0].function.arguments
-            args = json.loads(args_json)
+                tool_calls = resp.choices[0].message.tool_calls or []
+                if not tool_calls:
+                    # Defensive — should not happen because tool_choice forces it,
+                    # but if a provider misbehaves we want a clear error.
+                    raise RuntimeError("LLM did not call the answer_question tool")
+                args_json = tool_calls[0].function.arguments
+                args = json.loads(args_json)
             ##Modified using ChatGPT troubleshooting##
             
             sources = args.get("sources", [])

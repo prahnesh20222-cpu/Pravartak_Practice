@@ -1,12 +1,18 @@
 from __future__ import annotations
 from pathlib import Path
-from pydantic import BaseModel, Field
+from pydantic import  BaseModel,Field
 import time
-
+from pydantic_settings import BaseSettings, SettingsConfigDict
+#.env is in root directory i.e. week 4.
+ENV_FILE = Path(__file__).resolve().parents[2] / ".env" 
 #modified the code in W3 to add the option of local LLM
-class Settings(BaseModel):
+class Settings(BaseSettings):
     """Runtime configuration. Validated at construction."""
-
+    model_config = SettingsConfigDict(
+        env_file=ENV_FILE,
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
     questions_csv: Path  = Path("data/questions.csv")
     results_json:  Path  = Path("results.json")
     results_db:    Path  = Path("results.db")
@@ -16,9 +22,12 @@ class Settings(BaseModel):
     use_fake:      bool  = False
     # W4 LLM/retry configuration
     openai_api_key: str = ""
+    openai_base_url: str = ""
     max_retries: int = Field(3, ge=0)
     retry_delay_s: float = Field(1.0, gt=0)
-    
+
+
+
 
 class RunSummary(BaseModel):
     """One row per pipeline execution. Persisted to the `runs` table."""
