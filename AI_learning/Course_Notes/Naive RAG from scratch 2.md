@@ -5,7 +5,6 @@ source_type: class_notes
 session_type: live_session
 course: Advanced Certificate Programme in Agentic AI and RAG Engineering
 session_date: 2026-08-29
-Additional_session_date: 2026-09-05
 language: en
 technical_depth: low_to_medium
 rag_ready: false
@@ -49,11 +48,6 @@ additional_session_date: 2026-08-30
 - Small, stable corpus: Product manual under 50 pages . stable FAQ . documentation that changes quarterly. Long-context is better
 - Style or skill transfer: Brand voice . domain-specific reasoning . code generation in your stack's idiom. Fine-tuning teaches the model a behavior. RAG can't change how the model thinks. Finetuning is impractical
 - Structured, exact-match data: Order status . account balance . when does my flight depart. That's a database query, not a similarity search. Use SQL, return the row, format the answer. WE can provide the DB as a tool to an agent.
-
-### What are other other RAG types
-	- Graph RAG: Vector DB is replaced by Graph DB?
-	- Hybrid RAG: 
-	- Agentic RAG
 ## RAG anatomy
 - Two sections in the RAG architecture
 	- **Document upload or Indexing**
@@ -141,56 +135,9 @@ additional_session_date: 2026-08-30
 - **When direct `with open()` is acceptable:** If you are reading small files (e.g., tiny `.txt` or `.json` config files under a few kilobytes), disk I/O latency is near zero and direct `with open()` is practically harmless.    
 - **When to use the background executor pattern (`run_in_executor`):** When handling large files, high-throughput web applications (like FastAPI), or slow network/disk drives. Offloading to `run_in_executor` keeps the event loop free to serve other tasks concurrently while the file reads in the background.
 - **Note** the file load does not always need to be **async** . It can be batch process that runs on schedule. Such a pipeline can be synchronous
-- ```
-  from pathlib import path
-  file_path = Path("string of the file path)
-  
-  ## This module converts the string to a path object. This path object can then be used to extract file name, extension, directory, subdirectory etc. WIth plain string that cannot be done.
-  ```
+- 
 ## Retrieval
 - Pipeline to perform retrieval -->polishing -->send to user
-
-## Session Live Session on Embeddings + Vector DBs Contd
-
-
-
-- We can have multiple chunking methods for a corpus
-- We can only use one embedding model for the entire corpus
-- We must choose the vector DB based on the corpus we have including details about hierarchy
-- Rewatch the recording between 30-35 mins from start. The instructor gives a nice walkthrough of why we use the abstract class and static method. It looks like if the static method
-- The configuration of embedder, chunk, vectordb are configured in .env
-	![[Pasted image 20260905104514.png]]
-- This section of the code will be how we enrich with metadata. RBAC can be configured using this metadata section
-	![[Pasted image 20260905105902.png]]
-- **Note** The instructor's code does not use **asyncio.gather. We must include that in the code**
-- - Explain precision and recall in the context of retrieval or similarity search.
-	- The example provided in the class says a small chunk size can hurt recall.
-	- When the chunk size is big, the llm can misinterpret the content and provide incorrect answer. This will impact precision
-- if len(chunk_embed) == len(embed_query): is one way the demo script  ensure both corpus embedding and query embedding were done with the same vector.   This is not accurate, many embedding models can have same dimension. This is done better from metadata data of the pipelines. In a governed set up, this situation must not arise
-- In production level vector dB (like Qdrant, FAAISS, CromeDB, PineCone) there are inbuild features like ANN and clustering that will index the chunks we upload. This will ensure that RAG does not do a full corpus scan for every query. Instead, it uses this indexing method to retrieve from a prefiltered or clustered data
-
-## Session Live Session on Embeddings + Vector DBs Contd on
----
-session_date = 2026-09-06
----
-### Reranking
-- This is an optional procedure when we want to improve the **precision**
-- This does an additional cleanup of chunks fetched by the retriever
-- Some common methods are 
-	- **cross encoder model**:  Standard, cost effective method that is used in Production
-	- **LLM based reranker**
--  Reranker: This will use the query and each chunk and provide a relevance score for each using a transformer based algorithm. This is not the same as a similarity search.
-- Rerankers are computationally expensive. For higher performance, we may have to resort to paid versions of this tool
-- When we perform reranking, we can use more chunks from the retrieval.  So, if we use top5 cosine scores from retrieval, we can use 20 chunks with reranking. This will be able to pick up edge cases. This will primarily increase precision because the reranker may identify the right chunks better and increase precision. By increasing the size from 5-20, we might also end up increasing recall. We will add the topk filter after reranking and sent it do LLM
-- In this session @1:55:00 we have removed the filename mapping. This removes the citation capability. Vishnu says, we can transform the chunk with tha prefix of the filename. While this is a workaround, there must be a cleaner way to do this.
-- Are there specific features we must understand about rerankers to know which is suited for our usecase? Cost, latency, multilingual support, ease of deployment, etc. What are the performance metrics for these transformer models
-
-### Evaluation
-- We will use LLM as judge to see how well the retriever pipeline is performing
-- Task success Rate (TSR) and Groundness Success Rate (GSR), Retrieval Hit rate (RHR)
-- RHR and GSR together determines TSR
-- In ML parlance which is accuracy, which is precision and which is recall?
-- We cannot look at metrices for intermediate steps like chunking, embedding and retrieval. We have to use the metrices from a full end-to-end journey from the user prompt to LLM reponse.
 
 ## Questions to look up
 - If we upload a document to ChatGPT, it will answer the question. When we send a follow up question, it has to send the entire history again. This will consume additional tokens. RAG will have the same problem?
@@ -201,13 +148,10 @@ session_date = 2026-09-06
 - There are some document pre-processing that must be done before chunking. Can that be made an automated pipeline?
 - Does vector embedding require data modelling? how can we leverage the metadata to build relationships?  Vishnu says the requirement is less. Does that mean we have to build different databases for each use case? what if they are related?
 - When pdf contains images, or if pdf is created from scanned images, then the approach to embed them is different. We must use OCR approaches
--  What is a **staticmethod**? Usage is **@staticmethod**. Do we not need an empty class object to instantiate it?
+- ### What are other other RAG types
+	- Graph RAG: Vector DB is replaced by Graph DB?
+	- Hybrid RAG: 
+	- Agentic RAG
+- What is a **staticmethod**? Usage is **@staticmethod**. Do we not need an empty class object to instantiate it?
 - Around 1 hr 58 min, Vishnu describes briefly how metadata is loaded along with chunking. Rewatch that
-- Are there specific features we must understand about rerankers to know which is suited for our usecase? Cost, latency, multilingual support, ease of deployment, etc. What are the performance metrics for these transformer models that we can use to identify which reranker is useful
-- if my use case can handle high latency, but afford infra, I can use local LLMs wherever possible?
-
-
-
-
-
 - 

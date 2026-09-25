@@ -1,0 +1,283 @@
+strategy_name,snippet_ID,raw_response,parsed_extraction,cost_USD,latency_s
+zero_shot,j01,"```json
+{
+  ""company"": ""Acme Corp"",
+  ""role"": ""Senior Software Engineer"",
+  ""years_experience_required"": 5
+}
+```
+","{'company': 'Acme Corp', 'role': 'Senior Software Engineer', 'years_experience_required': 5}",0.0,97.334
+zero_shot,j02,"```json
+{
+  ""company"": ""Northwind Ltd"",
+  ""role"": ""Data Analyst"",
+  ""years_experience_required"": 2
+}
+```
+","{'company': 'Northwind Ltd', 'role': 'Data Analyst', 'years_experience_required': 2}",0.0,115.0
+zero_shot,j03,"```json
+{
+  ""company"": ""Globex International"",
+  ""role"": ""Product Manager - Growth"",
+  ""years_experience_required"": 4
+}
+```
+","{'company': 'Globex International', 'role': 'Product Manager - Growth', 'years_experience_required': 4}",0.0,123.188
+zero_shot,j04,"```json
+{
+  ""company"": ""Itech"",
+  ""role"": ""Lead DevOps Engineer"",
+  ""years_experience_required"": 6
+}
+```","{'company': 'Itech', 'role': 'Lead DevOps Engineer', 'years_experience_required': 6}",0.0,130.897
+zero_shot,j05,"```json
+{
+  ""company"": ""Hooli"",
+  ""role"": ""Junior Frontend Developer"",
+  ""years_experience_required"": null
+}
+```","{'company': 'Hooli', 'role': 'Junior Frontend Developer', 'years_experience_required': None}",0.0,222.343
+zero_shot,j06,"```json
+{
+  ""company"": ""Pied Piper Inc."",
+  ""role"": ""Senior ML Engineer"",
+  ""years_experience_required"": 7
+}
+```","{'company': 'Pied Piper Inc.', 'role': 'Senior ML Engineer', 'years_experience_required': 7}",0.0,192.984
+zero_shot,j07,"```json
+{
+  ""company"": ""Soylent Industries"",
+  ""role"": ""Engineering Manager"",
+  ""years_experience_required"": 3
+}
+```","{'company': 'Soylent Industries', 'role': 'Engineering Manager', 'years_experience_required': 3}",0.0,400.032
+zero_shot,j08,"```json
+{
+  ""company"": ""Wonka Confectionery Ltd."",
+  ""role"": ""Senior UX Researcher"",
+  ""years_experience_required"": 5
+}
+```
+","{'company': 'Wonka Confectionery Ltd.', 'role': 'Senior UX Researcher', 'years_experience_required': 5}",0.0,359.694
+zero_shot,j09,"```json
+{
+  ""company"": ""Stark Industries"",
+  ""role"": ""Cybersecurity Analyst"",
+  ""years_experience_required"": 3
+}
+```","{'company': 'Stark Industries', 'role': 'Cybersecurity Analyst', 'years_experience_required': 3}",0.0,306.386
+zero_shot,j10,"```json
+{
+  ""company"": ""Cyberdyne Systems"",
+  ""role"": ""AI/ML Research Scientist"",
+  ""years_experience_required"": null
+}
+```","{'company': 'Cyberdyne Systems', 'role': 'AI/ML Research Scientist', 'years_experience_required': None}",0.0,277.299
+few_shot,j01,"```json
+{""company"": ""Acme Corp"", ""role"": ""Senior Software Engineer"", ""years_experience_required"": 5}
+```","{'company': 'Acme Corp', 'role': 'Senior Software Engineer', 'years_experience_required': 5}",0.0001,318.161
+few_shot,j02,"```json
+{""company"": ""Northwind Ltd"", ""role"": ""Data Analyst"", ""years_experience_required"": 2}
+```","{'company': 'Northwind Ltd', 'role': 'Data Analyst', 'years_experience_required': 2}",0.0001,163.905
+few_shot,j03,"```json
+{""company"": ""Globex International"", ""role"": ""Product Manager - Growth"", ""years_experience_required"": 4}
+```","{'company': 'Globex International', 'role': 'Product Manager - Growth', 'years_experience_required': 4}",0.0001,351.098
+few_shot,j04,"```json
+{""company"": ""Initech"", ""role"": ""Lead DevOps Engineer"", ""years_experience_required"": 6}
+```","{'company': 'Initech', 'role': 'Lead DevOps Engineer', 'years_experience_required': 6}",0.0001,175.143
+few_shot,j05,"```json
+{""company"": ""Hooli"", ""role"": ""Junior Frontend Developer"", ""years_experience_required"": null}
+```","{'company': 'Hooli', 'role': 'Junior Frontend Developer', 'years_experience_required': None}",0.0001,268.918
+few_shot,j06,"```json
+{""company"": ""Pied Piper Inc."", ""role"": ""Senior ML Engineer"", ""years_experience_required"": 7}
+```","{'company': 'Pied Piper Inc.', 'role': 'Senior ML Engineer', 'years_experience_required': 7}",0.0001,68.957
+few_shot,j07,"```json
+{
+  ""company"": ""Soylent Industries"",
+  ""role"": ""Engineering Manager"",
+  ""years_experience_required"": 3
+}
+```","{'company': 'Soylent Industries', 'role': 'Engineering Manager', 'years_experience_required': 3}",0.0001,257.924
+few_shot,j08,"```json
+{""company"": ""Wonka Confectionery Ltd"", ""role"": ""Senior UX Researcher"", ""years_experience_required"": 5}
+```","{'company': 'Wonka Confectionery Ltd', 'role': 'Senior UX Researcher', 'years_experience_required': 5}",0.0001,233.959
+few_shot,j09,"```json
+{""company"": ""Stark Industries"", ""role"": ""Cybersecurity Analyst"", ""years_experience_required"": 5}
+```","{'company': 'Stark Industries', 'role': 'Cybersecurity Analyst', 'years_experience_required': 5}",0.0001,245.272
+few_shot,j10,"```json
+{
+  ""company"": ""Cyberdyne Systems"",
+  ""role"": ""AI/ML Research Scientist"",
+  ""years_experience_required"": null
+}
+```","{'company': 'Cyberdyne Systems', 'role': 'AI/ML Research Scientist', 'years_experience_required': None}",0.0001,413.096
+structured,j01,"```json
+{
+  ""company"": ""Acme Corp"",
+  ""role"": ""Senior Software Engineer"",
+  ""years_experience_required"": 5
+}
+```","{'company': 'Acme Corp', 'role': 'Senior Software Engineer', 'years_experience_required': 5}",0.0001,89.235
+structured,j02,"```json
+{
+  ""company"": ""Northwind Ltd"",
+  ""role"": ""Data Analyst"",
+  ""years_experience_required"": 2
+}
+```","{'company': 'Northwind Ltd', 'role': 'Data Analyst', 'years_experience_required': 2}",0.0001,339.261
+structured,j03,"```json
+{
+  ""company"": ""Globex International"",
+  ""role"": ""Product Manager - Growth"",
+  ""years_experience_required"": 4
+}
+```","{'company': 'Globex International', 'role': 'Product Manager - Growth', 'years_experience_required': 4}",0.0001,107.006
+structured,j04,"```json
+{
+  ""company"": ""Initech"",
+  ""role"": ""Lead DevOps Engineer"",
+  ""years_experience_required"": 6
+}
+```","{'company': 'Initech', 'role': 'Lead DevOps Engineer', 'years_experience_required': 6}",0.0001,214.072
+structured,j05,"```json
+{
+  ""company"": ""Hooli"",
+  ""role"": ""Junior Frontend Developer"",
+  ""years_experience_required"": null
+}
+```","{'company': 'Hooli', 'role': 'Junior Frontend Developer', 'years_experience_required': None}",0.0001,381.105
+structured,j06,"```json
+{
+  ""company"": ""Pied Piper Inc."",
+  ""role"": ""Senior ML Engineer"",
+  ""years_experience_required"": 7
+}
+```","{'company': 'Pied Piper Inc.', 'role': 'Senior ML Engineer', 'years_experience_required': 7}",0.0001,26.056
+structured,j07,"```json
+{
+  ""company"": ""Soylent Industries"",
+  ""role"": ""Engineering Manager"",
+  ""years_experience_required"": 3
+}
+```","{'company': 'Soylent Industries', 'role': 'Engineering Manager', 'years_experience_required': 3}",0.0001,46.488
+structured,j08,"```json
+{
+  ""company"": ""Wonka Confectionery Ltd."",
+  ""role"": ""Senior UX Researcher"",
+  ""years_experience_required"": 5
+}
+```","{'company': 'Wonka Confectionery Ltd.', 'role': 'Senior UX Researcher', 'years_experience_required': 5}",0.0001,287.069
+structured,j09,"```json
+{
+  ""company"": ""Stark Industries"",
+  ""role"": ""Cybersecurity Analyst"",
+  ""years_experience_required"": 3
+}
+```","{'company': 'Stark Industries', 'role': 'Cybersecurity Analyst', 'years_experience_required': 3}",0.0001,184.738
+structured,j10,"```json
+{
+  ""company"": ""Cyberdyne Systems"",
+  ""role"": ""AI/ML Research Scientist"",
+  ""years_experience_required"": null
+}
+```","{'company': 'Cyberdyne Systems', 'role': 'AI/ML Research Scientist', 'years_experience_required': None}",0.0001,391.711
+cot,j01,"Here's the JSON output based on the provided job description snippet:
+
+```json
+{
+  ""company"": ""Acme Corp"",
+  ""role"": ""Senior Software Engineer"",
+  ""years_experience_required"": 5
+}
+```
+",,0.0001,16.539
+cot,j02,"Here's the JSON output based on the provided job description snippet:
+
+```json
+{
+  ""company"": ""Northwind Ltd"",
+  ""role"": ""Data Analyst"",
+  ""years_experience_required"": 2
+}
+```
+",,0.0001,371.212
+cot,j03,"Here's the JSON output based on the provided job description snippet:
+
+```json
+{
+  ""company"": ""Globex International"",
+  ""role"": ""Product Manager - Growth"",
+  ""years_experience_required"": 4
+}
+```
+",,0.0001,298.216
+cot,j04,"Here's the JSON output based on the provided job description snippet:
+
+```json
+{
+  ""company"": ""Itech"",
+  ""role"": ""Lead DevOps Engineer"",
+  ""years_experience_required"": 6
+}
+```
+",,0.0001,79.565
+cot,j05,"Here's the JSON output based on the provided job description snippet:
+
+```json
+{
+  ""company"": ""Hooli"",
+  ""role"": ""Junior Frontend Developer"",
+  ""years_experience_required"": null
+}
+```
+",,0.0001,141.218
+cot,j06,"Here's the JSON output based on the provided job description snippet:
+
+```json
+{
+  ""company"": ""Pied Piper Inc."",
+  ""role"": ""Senior ML Engineer"",
+  ""years_experience_required"": 7
+}
+```
+",,0.0001,329.312
+cot,j07,"Here's the JSON output based on the provided job description snippet:
+
+```json
+{
+  ""company"": ""Soylent Industries"",
+  ""role"": ""Engineering Manager"",
+  ""years_experience_required"": 3
+}
+```
+",,0.0001,36.737
+cot,j08,"Here's the JSON output based on the provided job description snippet:
+
+```json
+{
+  ""company"": ""Wonka Confectionery Ltd."",
+  ""role"": ""Senior UX Researcher"",
+  ""years_experience_required"": 5
+}
+```
+",,0.0001,152.397
+cot,j09,"Here's the JSON output based on the provided job description snippet:
+
+```json
+{
+  ""company"": ""Stark Industries"",
+  ""role"": ""Cybersecurity Analyst"",
+  ""years_experience_required"": 5
+}
+```
+",,0.0001,57.237
+cot,j10,"Here's the JSON output based on the provided job description snippet:
+
+```json
+{
+  ""company"": ""Cyberdyne Systems"",
+  ""role"": ""AI/ML Research Scientist"",
+  ""years_experience_required"": null
+}
+```
+",,0.0001,204.073

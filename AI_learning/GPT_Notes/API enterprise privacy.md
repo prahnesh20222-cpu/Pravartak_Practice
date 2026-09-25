@@ -1,3 +1,4 @@
+---
 document_id: api_enterprise_privacy
 source_file:
 source_type: AI_Chat
@@ -14,6 +15,7 @@ source:
 additional_reading:
 impl_example1:
 imple_example2:
+---
 ## Prompt 1
 
 ### User

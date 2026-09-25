@@ -1,0 +1,305 @@
+strategy,snippet_id,raw_response,parsed_extraction,cost_usd,latency_s
+zero_shot,j01,"```json
+{
+  ""company"": ""Acme Corp"",
+  ""role"": ""Senior Software Engineer"",
+  ""years_experience_required"": 5
+}
+```","{'company': 'Acme Corp', 'role': 'Senior Software Engineer', 'years_experience_required': 5}",0.0,2.534
+zero_shot,j02,"```json
+{
+  ""company"": ""Northwind Ltd."",
+  ""role"": ""Data Analyst"",
+  ""years_experience_required"": 2
+}
+```","{'company': 'Northwind Ltd.', 'role': 'Data Analyst', 'years_experience_required': 2}",0.0,1.813
+zero_shot,j03,"```json
+{
+  ""company"": ""Globex International"",
+  ""role"": ""Product Manager - Growth"",
+  ""years_experience_required"": 4
+}
+```","{'company': 'Globex International', 'role': 'Product Manager - Growth', 'years_experience_required': 4}",0.0,2.192
+zero_shot,j04,"```json
+{
+  ""company"": ""Initech"",
+  ""role"": ""Lead DevOps Engineer"",
+  ""years_experience_required"": 6
+}
+```","{'company': 'Initech', 'role': 'Lead DevOps Engineer', 'years_experience_required': 6}",0.0,1.916
+zero_shot,j05,"```json
+{
+  ""company"": ""Hooli"",
+  ""role"": ""Junior Frontend Developer"",
+  ""years_experience_required"": null
+}
+```","{'company': 'Hooli', 'role': 'Junior Frontend Developer', 'years_experience_required': None}",0.0,2.357
+zero_shot,j06,"```json
+{
+  ""company"": ""Pied Piper Inc."",
+  ""role"": ""Senior ML Engineer"",
+  ""years_experience_required"": 7
+}
+```","{'company': 'Pied Piper Inc.', 'role': 'Senior ML Engineer', 'years_experience_required': 7}",0.0,2.579
+zero_shot,j07,"```json
+{
+  ""company"": ""Soylent Industries"",
+  ""role"": ""Engineering Manager"",
+  ""years_experience_required"": 3
+}
+```","{'company': 'Soylent Industries', 'role': 'Engineering Manager', 'years_experience_required': 3}",0.0,2.101
+zero_shot,j08,"```json
+{
+  ""company"": ""Wonka Confectionery Ltd."",
+  ""role"": ""Senior UX Researcher"",
+  ""years_experience_required"": 5
+}
+```","{'company': 'Wonka Confectionery Ltd.', 'role': 'Senior UX Researcher', 'years_experience_required': 5}",0.0,1.882
+zero_shot,j09,"```json
+{
+  ""company"": ""Stark Industries"",
+  ""role"": ""Cybersecurity Analyst"",
+  ""years_experience_required"": 3
+}
+```","{'company': 'Stark Industries', 'role': 'Cybersecurity Analyst', 'years_experience_required': 3}",0.0,1.877
+zero_shot,j10,"```json
+{
+  ""company"": ""Cyberdyne Systems"",
+  ""role"": ""AI/ML Research Scientist"",
+  ""years_experience_required"": null
+}
+```","{'company': 'Cyberdyne Systems', 'role': 'AI/ML Research Scientist', 'years_experience_required': None}",0.0,2.1
+few_shot,j01,"```json
+{""company"": ""Acme Corp"", ""role"": ""Senior Software Engineer"", ""years_experience_required"": 5}
+```","{'company': 'Acme Corp', 'role': 'Senior Software Engineer', 'years_experience_required': 5}",0.0001,1.872
+few_shot,j02,"```json
+{""company"": ""Northwind Ltd"", ""role"": ""Data Analyst"", ""years_experience_required"": 2}
+```","{'company': 'Northwind Ltd', 'role': 'Data Analyst', 'years_experience_required': 2}",0.0001,1.948
+few_shot,j03,"```json
+{""company"": ""Globex International"", ""role"": ""Product Manager - Growth"", ""years_experience_required"": 4}
+```","{'company': 'Globex International', 'role': 'Product Manager - Growth', 'years_experience_required': 4}",0.0001,2.177
+few_shot,j04,"```json
+{""company"": ""Initech"", ""role"": ""Lead DevOps Engineer"", ""years_experience_required"": 6}
+```","{'company': 'Initech', 'role': 'Lead DevOps Engineer', 'years_experience_required': 6}",0.0001,2.284
+few_shot,j05,"```json
+{""company"": ""Hooli"", ""role"": ""Junior Frontend Developer"", ""years_experience_required"": null}
+```","{'company': 'Hooli', 'role': 'Junior Frontend Developer', 'years_experience_required': None}",0.0001,4.338
+few_shot,j06,"```json
+{""company"": ""Pied Piper Inc."", ""role"": ""Senior ML Engineer"", ""years_experience_required"": 7}
+```","{'company': 'Pied Piper Inc.', 'role': 'Senior ML Engineer', 'years_experience_required': 7}",0.0001,1.977
+few_shot,j07,"```json
+{""company"": ""Soylent Industries"", ""role"": ""Engineering Manager"", ""years_experience_required"": 3}
+```","{'company': 'Soylent Industries', 'role': 'Engineering Manager', 'years_experience_required': 3}",0.0001,1.95
+few_shot,j08,"```json
+{""company"": ""Wonka Confectionery Ltd"", ""role"": ""Senior UX Researcher"", ""years_experience_required"": 5}
+```","{'company': 'Wonka Confectionery Ltd', 'role': 'Senior UX Researcher', 'years_experience_required': 5}",0.0001,2.424
+few_shot,j09,"```json
+{""company"": ""Stark Industries"", ""role"": ""Cybersecurity Analyst"", ""years_experience_required"": 3}
+```","{'company': 'Stark Industries', 'role': 'Cybersecurity Analyst', 'years_experience_required': 3}",0.0001,1.965
+few_shot,j10,"```json
+{""company"": ""Cyberdyne Systems"", ""role"": ""AI/ML Research Scientist"", ""years_experience_required"": null}
+```","{'company': 'Cyberdyne Systems', 'role': 'AI/ML Research Scientist', 'years_experience_required': None}",0.0001,2.048
+structured,j01,"{
+  ""company"": ""Acme Corp"",
+  ""role"": ""Senior Software Engineer"",
+  ""years_experience_required"": 5
+}","{'company': 'Acme Corp', 'role': 'Senior Software Engineer', 'years_experience_required': 5}",0.0,2.113
+structured,j02,"{
+  ""company"": ""Northwind Ltd"",
+  ""role"": ""Data Analyst"",
+  ""years_experience_required"": 2
+}","{'company': 'Northwind Ltd', 'role': 'Data Analyst', 'years_experience_required': 2}",0.0,5.979
+structured,j03,"{
+  ""company"": ""Globex International"",
+  ""role"": ""Product Manager - Growth"",
+  ""years_experience_required"": 4
+}","{'company': 'Globex International', 'role': 'Product Manager - Growth', 'years_experience_required': 4}",0.0,2.327
+structured,j04,"{
+  ""company"": ""Initech"",
+  ""role"": ""Lead DevOps Engineer"",
+  ""years_experience_required"": 6
+}","{'company': 'Initech', 'role': 'Lead DevOps Engineer', 'years_experience_required': 6}",0.0,2.915
+structured,j05,"{
+  ""company"": ""Hooli"",
+  ""role"": ""Junior Frontend Developer"",
+  ""years_experience_required"": null
+}","{'company': 'Hooli', 'role': 'Junior Frontend Developer', 'years_experience_required': None}",0.0,2.085
+structured,j06,"{
+  ""company"": ""Pied Piper Inc."",
+  ""role"": ""Senior ML Engineer"",
+  ""years_experience_required"": 7
+}","{'company': 'Pied Piper Inc.', 'role': 'Senior ML Engineer', 'years_experience_required': 7}",0.0,2.521
+structured,j07,"{
+  ""company"": ""Soylent Industries"",
+  ""role"": ""Engineering Manager"",
+  ""years_experience_required"": 3
+}","{'company': 'Soylent Industries', 'role': 'Engineering Manager', 'years_experience_required': 3}",0.0,2.086
+structured,j08,"{
+  ""company"": ""Wonka Confectionery Ltd."",
+  ""role"": ""Senior UX Researcher"",
+  ""years_experience_required"": 5
+}","{'company': 'Wonka Confectionery Ltd.', 'role': 'Senior UX Researcher', 'years_experience_required': 5}",0.0,2.299
+structured,j09,"{
+  ""company"": ""Stark Industries"",
+  ""role"": ""Cybersecurity Analyst"",
+  ""years_experience_required"": 3
+}","{'company': 'Stark Industries', 'role': 'Cybersecurity Analyst', 'years_experience_required': 3}",0.0,2.077
+structured,j10,"{
+  ""company"": ""Cyberdyne Systems"",
+  ""role"": ""AI/ML Research Scientist"",
+  ""years_experience_required"": null
+}","{'company': 'Cyberdyne Systems', 'role': 'AI/ML Research Scientist', 'years_experience_required': None}",0.0,2.013
+cot,j01,"To extract the required information from the job description snippet, let's analyze it step by step:
+
+1. **Company**: The company doing the hiring is mentioned at the beginning of the snippet as ""Acme Corp"".
+2. **Role**: The job title is specified as ""Senior Software Engineer"".
+3. **Years of Experience Required**: The snippet states that the ideal candidate has ""5+ years of backend development experience"". This indicates that the minimum experience required is 5 years.
+
+Now, let's compile this information into the required JSON format:
+
+```json
+{
+  ""company"": ""Acme Corp"",
+  ""role"": ""Senior Software Engineer"",
+  ""years_experience_required"": 5
+}
+```",,0.0001,3.365
+cot,j02,"To extract the required information from the job description snippet, let's analyze it step by step:
+
+1. **Company**: The company doing the hiring is mentioned as ""Northwind Ltd.""
+2. **Role**: The job title is specified as ""Data Analyst.""
+3. **Years of Experience Required**: The snippet states ""2 years minimum experience preferred."" This indicates that the minimum experience required is 2 years.
+
+Now, we can compile this information into the requested JSON format.
+
+```json
+{
+  ""company"": ""Northwind Ltd."",
+  ""role"": ""Data Analyst"",
+  ""years_experience_required"": 2
+}
+```",,0.0001,2.651
+cot,j03,"To extract the required information from the job description snippet, let's analyze it step by step:
+
+1. **Company**: The company doing the hiring is mentioned as ""Globex International.""
+2. **Role**: The job title is specified as ""Product Manager - Growth.""
+3. **Years of Experience Required**: The snippet states that they are looking for someone with ""at least 4 years of product management experience,"" which indicates that the minimum experience required is 4 years.
+
+Now, we can compile this information into the requested JSON format.
+
+```json
+{
+  ""company"": ""Globex International"",
+  ""role"": ""Product Manager - Growth"",
+  ""years_experience_required"": 4
+}
+```",,0.0001,3.399
+cot,j04,"To extract the required information from the job description snippet, let's analyze it step by step:
+
+1. **Company**: The company doing the hiring is mentioned at the beginning of the snippet as ""Initech.""
+2. **Role**: The job title is specified as ""Lead DevOps Engineer.""
+3. **Years of Experience Required**: The snippet states ""Around 6 years of hands-on infrastructure work expected,"" which indicates that the minimum experience required is 6 years.
+
+Now, we can compile this information into the requested JSON format.
+
+```json
+{
+  ""company"": ""Initech"",
+  ""role"": ""Lead DevOps Engineer"",
+  ""years_experience_required"": 6
+}
+```",,0.0001,2.877
+cot,j05,"To extract the required information from the job description snippet, let's analyze it step by step:
+
+1. **Company**: The company doing the hiring is mentioned as ""Hooli"".
+2. **Role**: The job title is ""Junior Frontend Developer"".
+3. **Years of Experience Required**: The snippet states ""no prior experience required"", which indicates that there is no minimum experience required. Therefore, we should return null for this field.
+
+Now, let's format this information into JSON:
+
+```json
+{
+  ""company"": ""Hooli"",
+  ""role"": ""Junior Frontend Developer"",
+  ""years_experience_required"": null
+}
+```",,0.0001,3.391
+cot,j06,"To extract the required information from the job description snippet, let's analyze it step by step:
+
+1. **Company**: The company doing the hiring is mentioned at the beginning of the snippet as ""Pied Piper Inc.""
+2. **Role**: The job title is specified as ""Senior ML Engineer.""
+3. **Years of Experience Required**: The snippet states ""We typically look for 7+ years in production ML and distributed systems."" This indicates that the minimum experience required is 7 years. Since it specifies ""7+"" years, we will take the integer value of 7.
+
+Now, we can compile this information into the required JSON format.
+
+```json
+{
+  ""company"": ""Pied Piper Inc."",
+  ""role"": ""Senior ML Engineer"",
+  ""years_experience_required"": 7
+}
+```",,0.0001,2.941
+cot,j07,"To extract the required information from the job description snippet, let's analyze it step by step:
+
+1. **Company**: The company mentioned in the snippet is ""Soylent Industries.""
+2. **Role**: The job title specified is ""Engineering Manager.""
+3. **Years of Experience Required**: The snippet states ""About three years leading engineering teams,"" which indicates that the minimum experience required is 3 years.
+
+Now, let's compile this information into the requested JSON format:
+
+```json
+{
+  ""company"": ""Soylent Industries"",
+  ""role"": ""Engineering Manager"",
+  ""years_experience_required"": 3
+}
+```",,0.0001,2.988
+cot,j08,"To extract the required information from the job description snippet, let's analyze it step by step:
+
+1. **Company**: The company doing the hiring is mentioned at the beginning of the snippet. It is ""Wonka Confectionery Ltd.""
+  
+2. **Role**: The job title is specified right after the company name. It is ""Senior UX Researcher.""
+
+3. **Years of Experience Required**: The snippet states ""Five years of UX research experience or equivalent portfolio required."" This indicates that the minimum experience required is five years. We need to convert this to an integer.
+
+Now, let's compile this information into the required JSON format:
+
+```json
+{
+  ""company"": ""Wonka Confectionery Ltd."",
+  ""role"": ""Senior UX Researcher"",
+  ""years_experience_required"": 5
+}
+```",,0.0001,3.161
+cot,j09,"To extract the required information from the job description snippet, let's analyze it step by step:
+
+1. **Company**: The company doing the hiring is mentioned at the beginning of the snippet. It is ""Stark Industries"".
+  
+2. **Role**: The job title is specified right after the company name. It is ""Cybersecurity Analyst"".
+
+3. **Years of Experience Required**: The snippet states ""Three to five years in a SOC environment or equivalent."" This indicates a range of experience, but we need to extract the minimum experience required as an integer. The minimum experience here is ""three years"".
+
+Now, let's compile this information into the required JSON format:
+
+```json
+{
+  ""company"": ""Stark Industries"",
+  ""role"": ""Cybersecurity Analyst"",
+  ""years_experience_required"": 3
+}
+```",,0.0001,3.125
+cot,j10,"To extract the required information from the job description snippet, let's analyze it step by step:
+
+1. **Company**: The company doing the hiring is mentioned at the beginning of the snippet as ""Cyberdyne Systems.""
+2. **Role**: The job title is specified as ""AI/ML Research Scientist.""
+3. **Years of Experience Required**: The snippet states that there is no specific years requirement listed, and they hire based on demonstrated impact. Therefore, we cannot assign a specific integer value for years of experience.
+
+Based on this analysis, the final JSON answer will be:
+
+```json
+{
+  ""company"": ""Cyberdyne Systems"",
+  ""role"": ""AI/ML Research Scientist"",
+  ""years_experience_required"": null
+}
+```",,0.0001,2.703

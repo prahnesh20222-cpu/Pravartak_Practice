@@ -1,0 +1,41 @@
+strategy,snippet_id,parsed_extraction,accuracy,parse_success
+zero_shot,j01,"{'company': 'Acme Corp', 'role': 'Senior Software Engineer', 'years_experience_required': 5}",3,1
+few_shot,j01,"{'company': 'Acme Corp', 'role': 'Senior Software Engineer', 'years_experience_required': 5}",3,1
+structured,j01,"{'company': 'Acme Corp', 'role': 'Senior Software Engineer', 'years_experience_required': 5}",3,1
+cot,j01,"{'company': 'Acme Corp', 'role': 'Senior Software Engineer', 'years_experience_required': 5}",3,1
+zero_shot,j02,"{'company': 'Northwind Ltd.', 'role': 'Data Analyst', 'years_experience_required': 2}",2,1
+few_shot,j02,"{'company': 'Northwind Ltd', 'role': 'Data Analyst', 'years_experience_required': 2}",3,1
+structured,j02,"{'company': 'Northwind Ltd', 'role': 'Data Analyst', 'years_experience_required': 2}",3,1
+cot,j02,"{'company': 'Northwind Ltd.', 'role': 'Data Analyst', 'years_experience_required': 2}",2,1
+zero_shot,j03,"{'company': 'Globex International', 'role': 'Product Manager - Growth', 'years_experience_required': 4}",3,1
+few_shot,j03,"{'company': 'Globex International', 'role': 'Product Manager - Growth', 'years_experience_required': 4}",3,1
+structured,j03,"{'company': 'Globex International', 'role': 'Product Manager - Growth', 'years_experience_required': 4}",3,1
+cot,j03,"{'company': 'Globex International', 'role': 'Product Manager - Growth', 'years_experience_required': 4}",3,1
+zero_shot,j04,"{'company': 'Initech', 'role': 'Lead DevOps Engineer', 'years_experience_required': 6}",3,1
+few_shot,j04,"{'company': 'Initech', 'role': 'Lead DevOps Engineer', 'years_experience_required': 6}",3,1
+structured,j04,"{'company': 'Initech', 'role': 'Lead DevOps Engineer', 'years_experience_required': 6}",3,1
+cot,j04,"{'company': 'Initech', 'role': 'Lead DevOps Engineer', 'years_experience_required': 6}",3,1
+zero_shot,j05,"{'company': 'Hooli', 'role': 'Junior Frontend Developer', 'years_experience_required': None}",2,1
+few_shot,j05,"{'company': 'Hooli', 'role': 'Junior Frontend Developer', 'years_experience_required': None}",2,1
+structured,j05,"{'company': 'Hooli', 'role': 'Junior Frontend Developer', 'years_experience_required': None}",2,1
+cot,j05,"{'company': 'Hooli', 'role': 'Junior Frontend Developer', 'years_experience_required': None}",2,1
+zero_shot,j06,"{'company': 'Pied Piper Inc.', 'role': 'Senior ML Engineer', 'years_experience_required': 7}",3,1
+few_shot,j06,"{'company': 'Pied Piper Inc.', 'role': 'Senior ML Engineer', 'years_experience_required': 7}",3,1
+structured,j06,"{'company': 'Pied Piper Inc.', 'role': 'Senior ML Engineer', 'years_experience_required': 7}",3,1
+cot,j06,"{'company': 'Pied Piper Inc.', 'role': 'Senior ML Engineer', 'years_experience_required': 7}",3,1
+zero_shot,j07,"{'company': 'Soylent Industries', 'role': 'Engineering Manager', 'years_experience_required': 3}",3,1
+few_shot,j07,"{'company': 'Soylent Industries', 'role': 'Engineering Manager', 'years_experience_required': 3}",3,1
+structured,j07,"{'company': 'Soylent Industries', 'role': 'Engineering Manager', 'years_experience_required': 3}",3,1
+cot,j07,"{'company': 'Soylent Industries', 'role': 'Engineering Manager', 'years_experience_required': 3}",3,1
+zero_shot,j08,"{'company': 'Wonka Confectionery Ltd.', 'role': 'Senior UX Researcher', 'years_experience_required': 5}",2,1
+few_shot,j08,"{'company': 'Wonka Confectionery Ltd', 'role': 'Senior UX Researcher', 'years_experience_required': 5}",3,1
+structured,j08,"{'company': 'Wonka Confectionery Ltd.', 'role': 'Senior UX Researcher', 'years_experience_required': 5}",2,1
+cot,j08,"{'company': 'Wonka Confectionery Ltd.', 'role': 'Senior UX Researcher', 'years_experience_required': 5}",2,1
+zero_shot,j09,"{'company': 'Stark Industries', 'role': 'Cybersecurity Analyst', 'years_experience_required': 3}",3,1
+few_shot,j09,"{'company': 'Stark Industries', 'role': 'Cybersecurity Analyst', 'years_experience_required': 3}",3,1
+structured,j09,"{'company': 'Stark Industries', 'role': 'Cybersecurity Analyst', 'years_experience_required': 3}",3,1
+cot,j09,"{'company': 'Stark Industries', 'role': 'Cybersecurity Analyst', 'years_experience_required': 3}",3,1
+zero_shot,j10,"{'company': 'Cyberdyne Systems', 'role': 'AI/ML Research Scientist', 'years_experience_required': None}",3,1
+few_shot,j10,"{'company': 'Cyberdyne Systems', 'role': 'AI/ML Research Scientist', 'years_experience_required': None}",3,1
+structured,j10,"{'company': 'Cyberdyne Systems', 'role': 'AI/ML Research Scientist', 'years_experience_required': None}",3,1
+cot,j10,"{'company': 'Cyberdyne Systems', 'role': 'AI/ML Research Scientist', 'years_experience_required': None}",3,1
