@@ -47,11 +47,12 @@ import json
 import logging
 import re
 from abc import ABC, abstractmethod
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 
 # ---------------------------------------------------------------------------
@@ -103,6 +104,36 @@ class DocumentMetadata(BaseModel):
 
     speaker_names_preserved: bool | None = None
     transcript_cleaned: bool | None = None
+
+    @field_validator("topics", "glossary_terms", mode="before")
+    @classmethod
+    def normalize_string_lists(cls, value: Any) -> list[str]:
+        """
+        YAML permits both a single string and a list. Normalize both forms
+        into list[str] for a predictable internal metadata structure.
+        """
+        if value is None:
+            return []
+        if isinstance(value, str):
+            return [value]
+        if isinstance(value, (list, tuple, set)):
+            return [str(item) for item in value]
+        raise TypeError("Expected a string or a list of strings.")
+
+    @field_validator("session_date", "retrieved_at", mode="before")
+    @classmethod
+    def normalize_dates(cls, value: Any) -> str | None:
+        """
+        PyYAML turns unquoted ISO dates into datetime.date objects.
+        Normalize those values back to ISO strings.
+        """
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value.isoformat()
+        if isinstance(value, date):
+            return value.isoformat()
+        return str(value)
 
 
 class MarkdownDocument(BaseModel):
@@ -342,20 +373,22 @@ class MarkdownParser:
         document: MarkdownDocument,
     ) -> list[MarkdownSection]:
         """
-        Convert the Markdown body into heading-aware sections.
+        Convert Markdown into heading-aware sections.
 
-        We retain the heading hierarchy because section context is valuable
-        retrieval metadata.
+        Fenced code blocks are opaque content. Headings appearing inside
+        ```...``` or ~~~...~~~ are not interpreted as Markdown headings.
         """
 
         lines = document.body.splitlines()
-
         sections: list[MarkdownSection] = []
 
         heading_path: list[str] = []
         current_level = 1
         current_title = "Document"
         current_lines: list[str] = []
+
+        in_fenced_code = False
+        fence_character: str | None = None
 
         def flush() -> None:
             nonlocal current_lines
@@ -375,6 +408,26 @@ class MarkdownParser:
             current_lines = []
 
         for line in lines:
+            stripped = line.strip()
+            fence_match = re.match(r"^(`{3,}|~{3,})(.*)$", stripped)
+
+            if fence_match:
+                marker = fence_match.group(1)[0]
+
+                if not in_fenced_code:
+                    in_fenced_code = True
+                    fence_character = marker
+                elif marker == fence_character:
+                    in_fenced_code = False
+                    fence_character = None
+
+                current_lines.append(line)
+                continue
+
+            if in_fenced_code:
+                current_lines.append(line)
+                continue
+
             match = re.match(r"^(#{1,6})\s+(.+?)\s*$", line)
 
             if match:
@@ -383,14 +436,12 @@ class MarkdownParser:
                 current_level = len(match.group(1))
                 current_title = match.group(2).strip()
 
-                # Maintain the heading hierarchy.
                 heading_path[:] = heading_path[: current_level - 1]
                 heading_path.append(current_title)
             else:
                 current_lines.append(line)
 
         flush()
-
         return sections
 
 
@@ -608,21 +659,52 @@ class MarkdownChunker:
     @staticmethod
     def _split_paragraphs(text: str) -> list[str]:
         """
-        Split section content on blank lines.
+        Split section content into paragraph-like blocks.
 
-        Markdown paragraphs are retained as complete units. This also means
-        that lists, code blocks and other Markdown constructs are not
-        arbitrarily split merely because they cross the character threshold.
-
-        Specialised handling for tables/code blocks can be added later if
-        corpus inspection shows that it is necessary.
+        Blank lines delimit ordinary paragraphs. Fenced code blocks remain
+        intact even when they contain blank lines.
         """
 
-        return [
-            paragraph.strip()
-            for paragraph in re.split(r"\n\s*\n", text.strip())
-            if paragraph.strip()
-        ]
+        lines = text.splitlines()
+        blocks: list[str] = []
+        current: list[str] = []
+
+        in_fenced_code = False
+        fence_character: str | None = None
+
+        def flush() -> None:
+            if current:
+                block = "\n".join(current).strip()
+                if block:
+                    blocks.append(block)
+                current.clear()
+
+        for line in lines:
+            stripped = line.strip()
+            fence_match = re.match(r"^(`{3,}|~{3,})(.*)$", stripped)
+
+            if fence_match:
+                marker = fence_match.group(1)[0]
+
+                if not in_fenced_code:
+                    in_fenced_code = True
+                    fence_character = marker
+                elif marker == fence_character:
+                    in_fenced_code = False
+                    fence_character = None
+
+                current.append(line)
+                continue
+
+            if not in_fenced_code and not stripped:
+                flush()
+                continue
+
+            current.append(line)
+
+        flush()
+        return blocks
+
 
     @staticmethod
     def _estimate_token_count(text: str) -> int:
