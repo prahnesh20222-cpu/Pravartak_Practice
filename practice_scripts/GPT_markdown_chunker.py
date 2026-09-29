@@ -2,485 +2,821 @@
 """
 markdown_chunker.py
 
-Deterministic Markdown chunker for RAG preparation.
+Deterministic Markdown chunking pipeline for the RAG corpus.
 
-Design goals:
-- Preserve Markdown structure and YAML front matter.
-- Prefer semantic boundaries (headings and paragraphs) over token boundaries.
-- Use token count as a constraint, not the primary chunking strategy.
-- Preserve document-level metadata on every chunk.
-- Emit JSONL suitable for embedding/vector-store ingestion.
+The pipeline deliberately separates responsibilities:
 
-Typical usage:
-    python markdown_chunker.py ./corpus ./chunks.jsonl
+    MarkdownLoader
+        -> reads the raw Markdown asynchronously
+
+    MarkdownParser
+        -> extracts and validates YAML front matter
+        -> separates document metadata from Markdown body
+        -> identifies Markdown sections
+
+    MarkdownChunker
+        -> creates section-aware chunks
+        -> splits sections into paragraphs
+        -> combines paragraphs from the same section up to a character threshold
+        -> never crosses a section boundary
+
+    JSONL writer
+        -> writes validated Chunk objects for downstream embedding/vector storage
+
+Pydantic is used for the data contracts so that malformed metadata/chunks are
+caught early rather than propagating silently into the RAG pipeline.
+
+Example:
+
+    python markdown_chunker.py ./corpus ./output/chunks.jsonl
 
 Optional:
-    python markdown_chunker.py ./corpus ./chunks.jsonl --min-tokens 500 --target-tokens 1500 --max-tokens 2000
+
+    python markdown_chunker.py ./corpus ./output/chunks.jsonl \
+        --min-tokens 500 \
+        --target-tokens 1500 \
+        --max-tokens 2000
 """
 
 from __future__ import annotations
 
 import argparse
+import asyncio
 import hashlib
 import json
+import logging
 import re
-from dataclasses import dataclass
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
 
-try:
-    import yaml
-except ImportError:
-    yaml = None
-
-try:
-    import tiktoken
-except ImportError:
-    tiktoken = None
+import yaml
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 
-HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+)
+
+logger = logging.getLogger(__name__)
 
 
-@dataclass
-class Section:
-    level: int
+# ---------------------------------------------------------------------------
+# Pydantic data models
+# ---------------------------------------------------------------------------
+
+class DocumentMetadata(BaseModel):
+    """
+    Metadata extracted from the YAML front matter of a Markdown document.
+
+    The corpus strategy deliberately allows different source types to carry
+    different metadata. Therefore extra fields are preserved rather than
+    rejected. Known fields are typed and validated by Pydantic.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    document_id: str | None = None
+    source: str | None = None
+    source_type: str | None = None
+    document_type: str | None = None
+
+    session_type: str | None = None
+    session_date: str | None = None
+    language: str | None = None
+    technical_depth: str | None = None
+
+    rag_ready: bool | None = None
+    chunking_strategy: str | None = None
+
+    topics: list[str] = Field(default_factory=list)
+    glossary_terms: list[str] = Field(default_factory=list)
+
+    source_url: str | None = None
+    retrieved_at: str | None = None
+    provenance: str | None = None
+
+    speaker_names_preserved: bool | None = None
+    transcript_cleaned: bool | None = None
+
+
+class MarkdownDocument(BaseModel):
+    """
+    Parsed representation of one Markdown source document.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    path: str
+    metadata: DocumentMetadata
+    body: str
+
+
+class MarkdownSection(BaseModel):
+    """
+    A heading-aware section of a Markdown document.
+
+    heading_path preserves the hierarchy, e.g.
+
+        ["RAG", "Retrieval", "Hybrid Retrieval"]
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    level: int = Field(ge=1, le=6)
     title: str
     heading_path: list[str]
     content: str
 
 
-def load_markdown(path: Path) -> tuple[dict[str, Any], str]:
-    """Read Markdown and split YAML front matter from the document body."""
-    text = path.read_text(encoding="utf-8")
+class ChunkMetadata(BaseModel):
+    """
+    Metadata attached to every chunk.
 
-    if not text.startswith("---"):
-        return {}, text
+    This is intentionally explicit because these fields are expected to become
+    retrieval/filtering metadata later in the pipeline.
+    """
 
-    lines = text.splitlines()
-    if len(lines) < 3 or lines[0].strip() != "---":
-        return {}, text
+    model_config = ConfigDict(extra="allow")
 
-    end = None
-    for i in range(1, len(lines)):
-        if lines[i].strip() in {"---", "..."}:
-            end = i
-            break
+    document_id: str
+    document_type: str
+    source: str
 
-    if end is None:
-        return {}, text
+    section: str
+    section_path: list[str]
 
-    front_matter_text = "\n".join(lines[1:end])
+    token_count: int = Field(ge=0)
+    character_count: int = Field(ge=0)
 
-    if yaml:
-        metadata = yaml.safe_load(front_matter_text) or {}
+    topic: str | None = None
+    topics: list[str] = Field(default_factory=list)
+    glossary_terms: list[str] = Field(default_factory=list)
+
+    speaker: str | None = None
+    timestamp: str | None = None
+
+    source_url: str | None = None
+    retrieved_at: str | None = None
+    provenance: str | None = None
+
+
+class DocumentChunk(BaseModel):
+    """
+    Final validated RAG chunk.
+
+    The text is kept separate from metadata because downstream embedding
+    pipelines normally embed `text` while using `metadata` for filtering,
+    tracing and provenance.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    chunk_id: str
+    text: str = Field(min_length=1)
+    metadata: ChunkMetadata
+
+
+class ChunkingConfig(BaseModel):
+    """
+    Runtime configuration for section-aware paragraph chunking.
+
+    `max_chunk_chars` is the maximum size used when PACKING paragraphs.
+    It is not a command to split a paragraph.
+
+    Therefore, if one paragraph is already larger than max_chunk_chars, that
+    paragraph remains intact as one chunk. This deliberately preserves the
+    semantic integrity of the paragraph.
+    """
+
+    max_chunk_chars: int = Field(default=500, ge=1)
+
+
+# ---------------------------------------------------------------------------
+# Markdown loader
+# ---------------------------------------------------------------------------
+
+class BaseDocumentLoader(ABC):
+    """
+    Base class for source-specific document loaders.
+    """
+
+    def __init__(self, path: str | Path):
+        self.path = Path(path)
+
+    @abstractmethod
+    async def load(self) -> str:
+        pass
+
+
+class MarkdownLoader(BaseDocumentLoader):
+    """
+    Loads Markdown files (.md).
+
+    This loader deliberately returns raw Markdown. Parsing YAML front matter
+    and interpreting Markdown structure are separate responsibilities.
+    """
+
+    async def load(self) -> str:
+        logger.info("Loading markdown file: %s", self.path.name)
+
+        if not self.path.exists():
+            logger.error("File not found: %s", self.path)
+            raise FileNotFoundError(f"File not found: {self.path}")
+
+        if self.path.suffix.lower() != ".md":
+            raise ValueError(f"Expected a Markdown file: {self.path}")
+
+        loop = asyncio.get_running_loop()
+
+        def _read_file() -> str:
+            try:
+                with self.path.open("r", encoding="utf-8") as file:
+                    return file.read()
+            except Exception:
+                logger.exception("Error reading markdown file: %s", self.path)
+                raise
+
+        return await loop.run_in_executor(None, _read_file)
+
+
+# ---------------------------------------------------------------------------
+# Markdown parser
+# ---------------------------------------------------------------------------
+
+class MarkdownParser:
+    """
+    Parses raw Markdown into a validated MarkdownDocument.
+
+    Expected document structure:
+
+        ---
+        document_id: ...
+        source_type: ...
+        topics:
+          - RAG
+          - chunking
+        ---
+        # Heading
+        ...
+
+    YAML front matter is treated as document metadata, not as chunk content.
+    """
+
+    FRONT_MATTER_START = "---"
+    FRONT_MATTER_END_MARKERS = {"---", "..."}
+
+    def parse(
+        self,
+        raw_markdown: str,
+        path: str | Path,
+    ) -> MarkdownDocument:
+        metadata_dict, body = self._split_front_matter(raw_markdown)
+
+        try:
+            metadata = DocumentMetadata.model_validate(metadata_dict)
+            return MarkdownDocument(
+                path=str(path),
+                metadata=metadata,
+                body=body,
+            )
+        except ValidationError:
+            logger.exception("Invalid document metadata: %s", path)
+            raise
+
+    def _split_front_matter(
+        self,
+        raw_markdown: str,
+    ) -> tuple[dict[str, Any], str]:
+        """
+        Extract YAML front matter.
+
+        If a Markdown file has no YAML front matter, return an empty metadata
+        dictionary and treat the complete file as the Markdown body.
+        """
+
+        lines = raw_markdown.splitlines()
+
+        if not lines or lines[0].strip() != self.FRONT_MATTER_START:
+            logger.warning("No YAML front matter found")
+            return {}, raw_markdown.strip()
+
+        closing_index = None
+
+        for index in range(1, len(lines)):
+            if lines[index].strip() in self.FRONT_MATTER_END_MARKERS:
+                closing_index = index
+                break
+
+        if closing_index is None:
+            raise ValueError(
+                "Markdown starts with YAML front matter marker '---', "
+                "but no closing YAML marker was found."
+            )
+
+        yaml_text = "\n".join(lines[1:closing_index])
+
+        try:
+            metadata = yaml.safe_load(yaml_text) or {}
+        except yaml.YAMLError as exc:
+            raise ValueError(
+                f"Invalid YAML front matter: {exc}"
+            ) from exc
+
         if not isinstance(metadata, dict):
-            metadata = {}
-    else:
-        # Small fallback for simple key: value front matter.
-        metadata = {}
-        for line in front_matter_text.splitlines():
-            if ":" in line:
-                key, value = line.split(":", 1)
-                metadata[key.strip()] = value.strip().strip('"').strip("'")
+            raise ValueError(
+                "YAML front matter must contain a mapping of metadata fields."
+            )
 
-    body = "\n".join(lines[end + 1:]).strip()
-    return metadata, body
+        body = "\n".join(lines[closing_index + 1:]).strip()
 
+        return metadata, body
 
-def count_tokens(text: str, encoder=None) -> int:
-    """Count tokens using tiktoken when available; otherwise use a rough fallback."""
-    if encoder is not None:
-        return len(encoder.encode(text))
+    def parse_sections(
+        self,
+        document: MarkdownDocument,
+    ) -> list[MarkdownSection]:
+        """
+        Convert the Markdown body into heading-aware sections.
 
-    # Deliberately conservative fallback. Install tiktoken for production runs.
-    return len(re.findall(r"\S+", text))
+        We retain the heading hierarchy because section context is valuable
+        retrieval metadata.
+        """
 
+        lines = document.body.splitlines()
 
-def parse_sections(markdown: str) -> list[Section]:
-    """
-    Parse Markdown into heading-aware sections.
+        sections: list[MarkdownSection] = []
 
-    A section contains the content belonging to one heading, including nested
-    headings in the same structural block. We later split oversized blocks.
-    """
-    lines = markdown.splitlines()
-    sections: list[Section] = []
+        heading_path: list[str] = []
+        current_level = 1
+        current_title = "Document"
+        current_lines: list[str] = []
 
-    heading_path: list[str] = []
-    current_level = 0
-    current_title = "Document"
-    current_lines: list[str] = []
+        def flush() -> None:
+            nonlocal current_lines
 
-    def flush():
-        nonlocal current_lines
-        content = "\n".join(current_lines).strip()
-        if content:
-            sections.append(
-                Section(
-                    level=current_level,
-                    title=current_title,
-                    heading_path=heading_path.copy(),
-                    content=content,
+            content = "\n".join(current_lines).strip()
+
+            if content:
+                sections.append(
+                    MarkdownSection(
+                        level=current_level,
+                        title=current_title,
+                        heading_path=heading_path.copy(),
+                        content=content,
+                    )
                 )
+
+            current_lines = []
+
+        for line in lines:
+            match = re.match(r"^(#{1,6})\s+(.+?)\s*$", line)
+
+            if match:
+                flush()
+
+                current_level = len(match.group(1))
+                current_title = match.group(2).strip()
+
+                # Maintain the heading hierarchy.
+                heading_path[:] = heading_path[: current_level - 1]
+                heading_path.append(current_title)
+            else:
+                current_lines.append(line)
+
+        flush()
+
+        return sections
+
+
+# ---------------------------------------------------------------------------
+# Token counting
+# ---------------------------------------------------------------------------
+
+class TokenCounter:
+    """
+    Token counter abstraction.
+
+    For the first implementation we keep the dependency optional. If
+    tiktoken is installed, it is used. Otherwise a whitespace estimate is
+    used.
+
+    IMPORTANT:
+    A production implementation should eventually use the tokenizer
+    corresponding to the embedding/chunking model being evaluated rather than
+    assuming that a generic tokenizer is identical to the model tokenizer.
+    """
+
+    def __init__(self) -> None:
+        self._encoder = None
+
+        try:
+            import tiktoken
+
+            self._encoder = tiktoken.get_encoding("cl100k_base")
+            logger.info("Using tiktoken cl100k_base for token estimates")
+        except ImportError:
+            logger.warning(
+                "tiktoken is not installed; using whitespace token estimates"
             )
-        current_lines = []
+        except Exception:
+            logger.exception("Could not initialize tiktoken")
+            self._encoder = None
 
-    for line in lines:
-        match = HEADING_RE.match(line)
+    def count(self, text: str) -> int:
+        if self._encoder is not None:
+            return len(self._encoder.encode(text))
 
-        if match:
-            flush()
-
-            level = len(match.group(1))
-            title = match.group(2).strip()
-
-            # Remove deeper headings when moving back up the hierarchy.
-            heading_path[:] = heading_path[: level - 1]
-            heading_path.append(title)
-
-            current_level = level
-            current_title = title
-        else:
-            current_lines.append(line)
-
-    flush()
-    return sections
+        # Fallback only. This is an estimate, not model-tokenizer output.
+        return len(re.findall(r"\S+", text))
 
 
-def split_paragraphs(text: str) -> list[str]:
-    """Split content at blank lines while retaining paragraphs as units."""
-    blocks = re.split(r"\n\s*\n", text.strip())
-    return [b.strip() for b in blocks if b.strip()]
+# ---------------------------------------------------------------------------
+# Chunker
+# ---------------------------------------------------------------------------
 
-
-def split_oversized_text(
-    text: str,
-    max_tokens: int,
-    encoder=None,
-) -> list[str]:
+class MarkdownChunker:
     """
-    Split an oversized section while trying to preserve Markdown blocks.
+    Section-aware, paragraph-preserving Markdown chunker.
 
-    First split on paragraphs. If one paragraph itself exceeds the limit,
-    split by lines. As a final fallback, split by words.
+    Chunking hierarchy:
+
+        Markdown document
+              ↓
+        Markdown sections
+              ↓
+        paragraphs within each section
+              ↓
+        combine adjacent paragraphs from the SAME section
+              ↓
+        ~500-character chunks
+
+    The important constraint is that a chunk never crosses a section boundary.
+
+    This is deliberately different from token-window chunking. The Markdown
+    structure determines the primary semantic boundary, while character count
+    is only used to decide how many paragraphs should be packed together.
     """
-    if count_tokens(text, encoder) <= max_tokens:
-        return [text.strip()]
 
-    blocks = split_paragraphs(text)
-    pieces: list[str] = []
-    current: list[str] = []
-    current_tokens = 0
+    def __init__(self, config: ChunkingConfig):
+        self.config = config
 
-    for block in blocks:
-        block_tokens = count_tokens(block, encoder)
+    def chunk(
+        self,
+        document: MarkdownDocument,
+        sections: list[MarkdownSection],
+    ) -> list[DocumentChunk]:
+        """
+        Create validated RAG chunks section by section.
 
-        if block_tokens > max_tokens:
-            if current:
-                pieces.append("\n\n".join(current))
-                current = []
-                current_tokens = 0
+        Each section is processed independently. Paragraphs within that
+        section are packed together until adding the next paragraph would
+        exceed the target character threshold.
 
-            # Try line-level splitting first.
-            lines = block.splitlines()
-            line_group: list[str] = []
-            line_tokens = 0
+        We intentionally do NOT split an individual paragraph. A paragraph
+        longer than 500 characters remains intact.
+        """
 
-            for line in lines:
-                line_count = count_tokens(line, encoder)
+        document_id = self._document_id(document)
 
-                if line_group and line_tokens + line_count > max_tokens:
-                    pieces.append("\n".join(line_group))
-                    line_group = []
-                    line_tokens = 0
-
-                if line_count > max_tokens:
-                    words = line.split()
-                    word_group: list[str] = []
-                    word_tokens = 0
-
-                    for word in words:
-                        wc = count_tokens(word, encoder)
-                        if word_group and word_tokens + wc > max_tokens:
-                            pieces.append(" ".join(word_group))
-                            word_group = []
-                            word_tokens = 0
-                        word_group.append(word)
-                        word_tokens += wc
-
-                    if word_group:
-                        pieces.append(" ".join(word_group))
-                else:
-                    line_group.append(line)
-                    line_tokens += line_count
-
-            if line_group:
-                pieces.append("\n".join(line_group))
-
-            continue
-
-        if current and current_tokens + block_tokens > max_tokens:
-            pieces.append("\n\n".join(current))
-            current = []
-            current_tokens = 0
-
-        current.append(block)
-        current_tokens += block_tokens
-
-    if current:
-        pieces.append("\n\n".join(current))
-
-    return [p.strip() for p in pieces if p.strip()]
-
-
-def merge_small_chunks(
-    chunks: list[dict[str, Any]],
-    min_tokens: int,
-    max_tokens: int,
-    encoder=None,
-) -> list[dict[str, Any]]:
-    """
-    Merge adjacent small chunks when the combined content stays within max_tokens.
-
-    This prevents tiny fragments from becoming individual vector records.
-    """
-    if not chunks:
-        return []
-
-    merged: list[dict[str, Any]] = []
-
-    for chunk in chunks:
-        if not merged:
-            merged.append(chunk)
-            continue
-
-        previous = merged[-1]
-        combined_text = previous["text"].rstrip() + "\n\n" + chunk["text"].lstrip()
-        combined_tokens = count_tokens(combined_text, encoder)
-
-        if (
-            previous["token_count"] < min_tokens
-            and combined_tokens <= max_tokens
-            and previous["section_path"][:-1] == chunk["section_path"][:-1]
-        ):
-            previous["text"] = combined_text
-            previous["token_count"] = combined_tokens
-            previous["section"] = (
-                previous["section"] + " | " + chunk["section"]
-                if previous["section"] != chunk["section"]
-                else previous["section"]
-            )
-        else:
-            merged.append(chunk)
-
-    return merged
-
-
-def make_document_id(path: Path, metadata: dict[str, Any]) -> str:
-    """Use supplied document_id; otherwise create a stable ID from the path."""
-    if metadata.get("document_id"):
-        return str(metadata["document_id"])
-
-    normalized = str(path.resolve()).encode("utf-8")
-    return hashlib.sha1(normalized).hexdigest()[:16]
-
-
-def make_chunk_id(document_id: str, index: int, text: str) -> str:
-    digest = hashlib.sha1(text.encode("utf-8")).hexdigest()[:10]
-    return f"{document_id}-chunk-{index:04d}-{digest}"
-
-
-def build_chunks(
-    path: Path,
-    metadata: dict[str, Any],
-    sections: list[Section],
-    min_tokens: int,
-    target_tokens: int,
-    max_tokens: int,
-    encoder=None,
-) -> list[dict[str, Any]]:
-    document_id = make_document_id(path, metadata)
-    document_type = metadata.get("source_type") or metadata.get("document_type") or "markdown"
-
-    raw_chunks: list[dict[str, Any]] = []
-
-    for section in sections:
-        # target_tokens is used as the preferred packing point, while
-        # max_tokens is the hard constraint.
-        section_pieces = split_oversized_text(
-            section.content,
-            max_tokens=max_tokens,
-            encoder=encoder,
+        document_type = (
+            document.metadata.source_type
+            or document.metadata.document_type
+            or "markdown"
         )
 
-        current_piece: list[str] = []
-        current_tokens = 0
+        chunks: list[DocumentChunk] = []
 
-        for piece in section_pieces:
-            piece_tokens = count_tokens(piece, encoder)
+        for section in sections:
+            # A section without actual content should not produce a chunk.
+            if not section.content.strip():
+                continue
 
-            if (
-                current_piece
-                and current_tokens + piece_tokens > target_tokens
-            ):
-                text = "\n\n".join(current_piece).strip()
-                raw_chunks.append(
-                    {
-                        "document_id": document_id,
-                        "source": str(metadata.get("source") or path.name),
-                        "document_type": document_type,
-                        "section": section.title,
-                        "section_path": section.heading_path,
-                        "text": text,
-                        "token_count": count_tokens(text, encoder),
-                    }
-                )
-                current_piece = []
-                current_tokens = 0
+            paragraphs = self._split_paragraphs(section.content)
 
-            current_piece.append(piece)
-            current_tokens += piece_tokens
-
-        if current_piece:
-            text = "\n\n".join(current_piece).strip()
-            raw_chunks.append(
-                {
-                    "document_id": document_id,
-                    "source": str(metadata.get("source") or path.name),
-                    "document_type": document_type,
-                    "section": section.title,
-                    "section_path": section.heading_path,
-                    "text": text,
-                    "token_count": count_tokens(text, encoder),
-                }
+            section_chunks = self._chunk_section(
+                section=section,
+                paragraphs=paragraphs,
             )
 
-    raw_chunks = merge_small_chunks(
-        raw_chunks,
-        min_tokens=min_tokens,
-        max_tokens=max_tokens,
-        encoder=encoder,
+            for text in section_chunks:
+                chunk_index = len(chunks)
+
+                metadata = ChunkMetadata(
+                    document_id=document_id,
+                    document_type=document_type,
+                    source=(
+                        document.metadata.source
+                        or Path(document.path).name
+                    ),
+                    section=section.title,
+                    section_path=section.heading_path,
+
+                    # Character count controls chunking. Token count is
+                    # retained as useful downstream metadata, but is NOT used
+                    # to determine chunk boundaries.
+                    token_count=self._estimate_token_count(text),
+                    character_count=len(text),
+
+                    topics=document.metadata.topics,
+                    glossary_terms=document.metadata.glossary_terms,
+                    source_url=document.metadata.source_url,
+                    retrieved_at=document.metadata.retrieved_at,
+                    provenance=document.metadata.provenance,
+                )
+
+                chunk_id = self._chunk_id(
+                    document_id=document_id,
+                    index=chunk_index,
+                    text=text,
+                )
+
+                chunks.append(
+                    DocumentChunk(
+                        chunk_id=chunk_id,
+                        text=text,
+                        metadata=metadata,
+                    )
+                )
+
+        return chunks
+
+    def _chunk_section(
+        self,
+        section: MarkdownSection,
+        paragraphs: list[str],
+    ) -> list[str]:
+        """
+        Pack paragraphs within one section.
+
+        Example with max_chunk_chars = 500:
+
+            Paragraph A = 250 chars
+            Paragraph B = 180 chars
+            Paragraph C = 220 chars
+
+        Result:
+
+            Chunk 1 = A + B       (~430 chars)
+            Chunk 2 = C            (~220 chars)
+
+        We never combine C with A/B once the character threshold would be
+        exceeded. More importantly, paragraphs are never split. If C itself
+        is larger than the configured maximum, C remains one intact chunk.
+        """
+
+        chunks: list[str] = []
+        current_paragraphs: list[str] = []
+        current_size = 0
+
+        for paragraph in paragraphs:
+            paragraph_size = len(paragraph)
+
+            if not current_paragraphs:
+                current_paragraphs = [paragraph]
+                current_size = paragraph_size
+                continue
+
+            candidate_size = (
+                current_size
+                + 2  # "\n\n" separator
+                + paragraph_size
+            )
+
+            if candidate_size > self.config.max_chunk_chars:
+                # Flush the current group before starting the next one.
+                chunks.append("\n\n".join(current_paragraphs))
+
+                current_paragraphs = [paragraph]
+                current_size = paragraph_size
+            else:
+                # The paragraph fits within the target, so keep it with
+                # the preceding paragraphs from the same section.
+                current_paragraphs.append(paragraph)
+                current_size = candidate_size
+
+        if current_paragraphs:
+            chunks.append("\n\n".join(current_paragraphs))
+
+        return chunks
+
+    @staticmethod
+    def _split_paragraphs(text: str) -> list[str]:
+        """
+        Split section content on blank lines.
+
+        Markdown paragraphs are retained as complete units. This also means
+        that lists, code blocks and other Markdown constructs are not
+        arbitrarily split merely because they cross the character threshold.
+
+        Specialised handling for tables/code blocks can be added later if
+        corpus inspection shows that it is necessary.
+        """
+
+        return [
+            paragraph.strip()
+            for paragraph in re.split(r"\n\s*\n", text.strip())
+            if paragraph.strip()
+        ]
+
+    @staticmethod
+    def _estimate_token_count(text: str) -> int:
+        """
+        Lightweight whitespace-based token estimate.
+
+        This value is retained as metadata for downstream analysis. It is
+        deliberately NOT used to decide chunk boundaries; character length
+        and paragraph boundaries control chunking in this version.
+        """
+        return len(re.findall(r"\S+", text))
+
+    @staticmethod
+    def _document_id(document: MarkdownDocument) -> str:
+        """
+        Prefer the document_id supplied by YAML.
+
+        If it is absent, generate a stable ID from the file path.
+        """
+
+        if document.metadata.document_id:
+            return document.metadata.document_id
+
+        path_bytes = str(Path(document.path).resolve()).encode("utf-8")
+        return hashlib.sha1(path_bytes).hexdigest()[:16]
+
+    @staticmethod
+    def _chunk_id(
+        document_id: str,
+        index: int,
+        text: str,
+    ) -> str:
+        """
+        Generate a deterministic chunk identifier.
+
+        The content hash helps make the ID stable and traceable while the
+        sequence number preserves document order.
+        """
+
+        digest = hashlib.sha1(
+            text.encode("utf-8")
+        ).hexdigest()[:10]
+
+        return (
+            f"{document_id}-chunk-{index:04d}-{digest}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Pipeline
+# ---------------------------------------------------------------------------
+
+async def process_file(
+    path: Path,
+    parser: MarkdownParser,
+    chunker: MarkdownChunker,
+) -> list[DocumentChunk]:
+    """
+    Process one Markdown document from raw file to validated chunks.
+    """
+
+    loader = MarkdownLoader(path)
+
+    raw_markdown = await loader.load()
+
+    document = parser.parse(
+        raw_markdown=raw_markdown,
+        path=path,
     )
 
-    final_chunks = []
-    for index, chunk in enumerate(raw_chunks):
-        enriched = dict(chunk)
-        enriched["chunk_id"] = make_chunk_id(
-            document_id,
-            index,
-            chunk["text"],
-        )
+    sections = parser.parse_sections(document)
 
-        # Carry document-level metadata down to the chunk.
-        for key in (
-            "topic",
-            "topics",
-            "glossary_terms",
-            "speaker",
-            "timestamp",
-            "source_url",
-            "retrieved_at",
-            "provenance",
-        ):
-            if key in metadata:
-                enriched[key] = metadata[key]
+    chunks = chunker.chunk(
+        document=document,
+        sections=sections,
+    )
 
-        enriched["metadata"] = {
-            "document_id": enriched["document_id"],
-            "document_type": enriched["document_type"],
-            "source": enriched["source"],
-            "section": enriched["section"],
-            "section_path": enriched["section_path"],
-            "topic": enriched.get("topic"),
-            "topics": enriched.get("topics"),
-            "glossary_terms": enriched.get("glossary_terms"),
-            "speaker": enriched.get("speaker"),
-            "timestamp": enriched.get("timestamp"),
-            "source_url": enriched.get("source_url"),
-            "retrieved_at": enriched.get("retrieved_at"),
-            "provenance": enriched.get("provenance"),
-        }
+    logger.info(
+        "Processed %s -> %d chunks",
+        path.name,
+        len(chunks),
+    )
 
-        final_chunks.append(enriched)
-
-    return final_chunks
+    return chunks
 
 
-def process_directory(
+async def process_directory(
     input_dir: Path,
     output_file: Path,
-    min_tokens: int,
-    target_tokens: int,
-    max_tokens: int,
-):
-    encoder = None
-    if tiktoken:
-        try:
-            encoder = tiktoken.get_encoding("cl100k_base")
-        except Exception:
-            encoder = None
+    config: ChunkingConfig,
+) -> None:
+    """
+    Process all Markdown files recursively and write one JSON object per line.
+
+    JSONL is useful here because each chunk becomes an independent record that
+    can later be sent to an embedding/vector-store pipeline.
+    """
 
     markdown_files = sorted(input_dir.rglob("*.md"))
 
     if not markdown_files:
-        raise SystemExit(f"No .md files found under: {input_dir}")
+        raise FileNotFoundError(
+            f"No Markdown files found under: {input_dir}"
+        )
 
-    output_file.parent.mkdir(parents=True, exist_ok=True)
+    parser = MarkdownParser()
+    chunker = MarkdownChunker(config=config)
+
+    output_file.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
     total_chunks = 0
 
-    with output_file.open("w", encoding="utf-8") as out:
+    with output_file.open("w", encoding="utf-8") as output:
         for path in markdown_files:
-            metadata, body = load_markdown(path)
-            sections = parse_sections(body)
+            try:
+                chunks = await process_file(
+                    path=path,
+                    parser=parser,
+                    chunker=chunker,
+                )
 
-            chunks = build_chunks(
-                path=path,
-                metadata=metadata,
-                sections=sections,
-                min_tokens=min_tokens,
-                target_tokens=target_tokens,
-                max_tokens=max_tokens,
-                encoder=encoder,
-            )
+                for chunk in chunks:
+                    # model_dump() ensures the output comes from the
+                    # validated Pydantic model rather than raw dictionaries.
+                    output.write(
+                        json.dumps(
+                            chunk.model_dump(mode="json"),
+                            ensure_ascii=False,
+                        )
+                        + "\n"
+                    )
 
-            for chunk in chunks:
-                out.write(json.dumps(chunk, ensure_ascii=False) + "\n")
-                total_chunks += 1
+                total_chunks += len(chunks)
 
-            print(f"{path.name}: {len(chunks)} chunks")
+            except (ValueError, ValidationError, FileNotFoundError):
+                logger.exception(
+                    "Skipping invalid document: %s",
+                    path,
+                )
 
-    counter_type = "tiktoken" if encoder else "whitespace fallback"
-    print(f"\nCreated {total_chunks} chunks")
-    print(f"Token counter: {counter_type}")
-    print(f"Output: {output_file}")
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="Chunk Markdown documents for RAG."
+    logger.info(
+        "Completed. %d chunks written to %s",
+        total_chunks,
+        output_file,
     )
-    parser.add_argument("input_dir", type=Path)
-    parser.add_argument("output_file", type=Path)
-    parser.add_argument("--min-tokens", type=int, default=500)
-    parser.add_argument("--target-tokens", type=int, default=1500)
-    parser.add_argument("--max-tokens", type=int, default=2000)
+
+
+# ---------------------------------------------------------------------------
+# Command-line interface
+# ---------------------------------------------------------------------------
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Create validated RAG chunks from Markdown files."
+    )
+
+    parser.add_argument(
+        "input_dir",
+        type=Path,
+        help="Directory containing Markdown files",
+    )
+
+    parser.add_argument(
+        "output_file",
+        type=Path,
+        help="Output JSONL file",
+    )
+
+    parser.add_argument(
+        "--max-chars",
+        type=int,
+        default=500,
+        help=(
+            "Maximum character size used to pack paragraphs. "
+            "Paragraphs are never split to satisfy this value "
+            "(default: 500)"
+        ),
+    )
 
     args = parser.parse_args()
 
-    if args.min_tokens >= args.max_tokens:
-        parser.error("--min-tokens must be smaller than --max-tokens")
+    config = ChunkingConfig(
+        max_chunk_chars=args.max_chars,
+    )
 
-    if args.target_tokens > args.max_tokens:
-        parser.error("--target-tokens cannot exceed --max-tokens")
-
-    process_directory(
-        input_dir=args.input_dir,
-        output_file=args.output_file,
-        min_tokens=args.min_tokens,
-        target_tokens=args.target_tokens,
-        max_tokens=args.max_tokens,
+    asyncio.run(
+        process_directory(
+            input_dir=args.input_dir,
+            output_file=args.output_file,
+            config=config,
+        )
     )
 
 
