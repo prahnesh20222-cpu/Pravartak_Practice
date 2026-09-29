@@ -35,7 +35,7 @@ from typing import Any
 from openai import OpenAI
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
-
+from dotenv import load_dotenv
 # ─── Configuration ──────────────────────────────────────────────────────
 
 CORPUS_DIR        = Path(__file__).parent / "corpus" #Take the directory containing this Python file, and look for a subdirectory called corpus
@@ -46,6 +46,8 @@ EMBEDDING_DIM     = 1536
 CHAT_MODEL        = "gpt-4o-mini"
 TARGET_CHUNK_SIZE = 500   # characters
 CHUNK_OVERLAP     = 80    # characters
+
+load_dotenv() # using this approach instead of the storing environment variable
 
 openai = OpenAI()
 qdrant = QdrantClient(
@@ -67,13 +69,60 @@ def load_corpus(corpus_dir: Path) -> list[dict[str, Any]]:
       - For each file, read its text and extract the first non-empty line as title
       - Return the list of doc dicts
     """
-    # TODO: your code here
-    raise NotImplementedError("Implement load_corpus")
-
+    corpus = []
+    for file_path in corpus_dir.glob("*.txt"):
+        
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                text = f.read()
+                # Extract the first non-empty line as title
+                title = next((line for line in text.splitlines() if line.strip()), "") #finds the first non-empty line in text
+                corpus.append({
+                    "source": file_path.name,
+                    "title": title,
+                    "text": text, #the text also includes the title
+                })
+        except Exception as e:
+            print(f"Error reading file {file_path}")
+               
+        
+    return corpus 
+#corpus = load_corpus(CORPUS_DIR)
 
 # ─── Step 2: Chunk each document ────────────────────────────────────────
+##Created a function to identify sections to perform section wise chunking
+def find_section_headers(text: str, max_header_length: int = 60) -> dict[str, str]:
+    """Return a mapping of each detected header to its section text."""
+    terminal_punctuation = ".!?;:,"
+    sections = {}
+    current_header = None
+    current_lines = []
+
+    for line in text.splitlines():
+        stripped = line.strip()
+        is_header = (
+            stripped
+            and len(stripped) <= max_header_length
+            and stripped[-1] not in terminal_punctuation
+        )
+
+        if is_header:
+            if current_header is not None:
+                sections[current_header] = "\n".join(current_lines).strip()
+
+            current_header = stripped
+            current_lines = []
+
+        elif current_header is not None:
+            current_lines.append(line)
+
+    if current_header is not None:
+        sections[current_header] = "\n".join(current_lines).strip()
+
+    return sections
 
 def chunk_document(doc: dict[str, Any]) -> list[dict[str, Any]]:
+
     """Split a document into smaller chunks.
 
     Each chunk should be a dict with: source, title, section, text.
@@ -92,9 +141,49 @@ def chunk_document(doc: dict[str, Any]) -> list[dict[str, Any]]:
       - Implement it
       - Return list of chunk dicts
     """
-    # TODO: your code here
-    raise NotImplementedError("Implement chunk_document")
+    
+    """Split a document into paragraph-preserving chunks within each section."""
+    """Split a document into section-aware chunks."""
+    chunks = []
+    sections = find_section_headers(doc["text"])
 
+    for section, section_text in sections.items():
+        # Skip sections that contain no actual content
+        if not section_text.strip():
+            continue
+
+        paragraphs = [
+            paragraph.strip()
+            for paragraph in re.split(r"\n\s*\n", section_text.strip())
+            if paragraph.strip()
+        ]
+
+        current_paragraphs = []
+
+        for paragraph in paragraphs:
+            candidate = "\n\n".join(current_paragraphs + [paragraph])
+
+            if current_paragraphs and len(candidate) > TARGET_CHUNK_SIZE:
+                chunks.append({
+                    "source": doc["source"],
+                    "title": doc["title"],
+                    "section": section,
+                    "text": "\n\n".join(current_paragraphs),
+                })
+                current_paragraphs = [paragraph]
+            else:
+                current_paragraphs.append(paragraph)
+
+        if current_paragraphs:
+            chunks.append({
+                "source": doc["source"],
+                "title": doc["title"],
+                "section": section,
+                "text": "\n\n".join(current_paragraphs),
+            })
+
+    return chunks
+#chunks = chunk_document(corpus[4])
 
 # ─── Step 3: Embed text ─────────────────────────────────────────────────
 
@@ -108,7 +197,17 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
       - Extract the embedding vectors from the response
     """
     # TODO: your code here
-    raise NotImplementedError("Implement embed_texts")
+    """Batch-embed a list of texts using OpenAI's embedding model.
+
+    Returns a list of 1536-dim float vectors (same order as inputs).
+    """
+
+    response = openai.embeddings.create(
+        model=EMBEDDING_MODEL,
+        input=texts,
+    )
+
+    return [item.embedding for item in response.data]
 
 
 # ─── Step 4: Set up the Qdrant collection ───────────────────────────────
@@ -120,8 +219,24 @@ def setup_collection() -> None:
       - Use qdrant.recreate_collection
       - VectorParams with EMBEDDING_DIM and Distance.COSINE
     """
-    # TODO: your code here
-    raise NotImplementedError("Implement setup_collection")
+    # TODO: your code here  
+
+# --------------------------------------------------
+# 1. Create collection
+# --------------------------------------------------
+
+    """Create (or recreate) the Qdrant collection."""
+
+    if qdrant.collection_exists(COLLECTION_NAME):
+        qdrant.delete_collection(COLLECTION_NAME) # This is not suitable for capstone
+
+    qdrant.create_collection(
+        collection_name=COLLECTION_NAME,
+        vectors_config=VectorParams(
+            size=EMBEDDING_DIM,
+            distance=Distance.COSINE,
+        ),
+    )
 
 
 # ─── Step 5: Ingest chunks into Qdrant ──────────────────────────────────
@@ -135,7 +250,25 @@ def ingest_chunks(chunks: list[dict[str, Any]]) -> None:
       - qdrant.upsert
     """
     # TODO: your code here
-    raise NotImplementedError("Implement ingest_chunks")
+    """Embed every chunk and upsert into Qdrant."""
+
+    texts = [chunk["text"] for chunk in chunks]
+
+    vectors = embed_texts(texts)
+
+    points = [
+        PointStruct(
+            id=str(uuid.uuid4()),
+            vector=vector,
+            payload=chunk,
+        )
+        for chunk, vector in zip(chunks, vectors)
+    ]
+
+    qdrant.upsert(
+        collection_name=COLLECTION_NAME,
+        points=points,
+    )
 
 
 # ─── Step 6: Retrieve ───────────────────────────────────────────────────
@@ -148,8 +281,22 @@ def retrieve(query: str, k: int = 3) -> list[dict[str, Any]]:
       - qdrant.search with the query vector, limit=k
       - Return list of chunk dicts (include score for citations)
     """
-    # TODO: your code here
-    raise NotImplementedError("Implement retrieve")
+    query_vector = embed_texts([query])[0]
+
+    results = qdrant.query_points(
+    collection_name=COLLECTION_NAME,
+    query=query_vector,
+    limit=k,
+    with_payload=True,
+).points
+
+    chunks = []
+    for result in results:
+        chunk = dict(result.payload)
+        chunk["score"] = result.score
+        chunks.append(chunk)
+
+    return chunks
 
 
 # ─── Step 7: Generate the answer ────────────────────────────────────────
@@ -172,14 +319,65 @@ def answer(question: str, k: int = 3) -> dict[str, Any]:
       - Return dict with: question, answer, citations, latency_ms
     """
     # TODO: your code here
-    raise NotImplementedError("Implement answer")
+    """End-to-end: retrieve, format context, call LLM, return result."""
+
+    start = time.perf_counter()
+
+    chunks = retrieve(question, k=k)
+
+    context_parts = []
+
+    for chunk in chunks:
+        context_parts.append(
+            f"[Source: {chunk['title']} — {chunk['section']}]\n"
+            f"{chunk['text']}"
+        )
+
+    context = "\n\n".join(context_parts)
+
+    user_message = f"""Question:
+{question}
+
+Excerpts:
+{context}
+"""
+
+    response = openai.chat.completions.create(
+        model=CHAT_MODEL,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_message},
+        ],
+    )
+
+    answer_text = response.choices[0].message.content
+
+    citations = [
+        {
+            "source": chunk["source"],
+            "title": chunk["title"],
+            "section": chunk["section"],
+            "score": chunk["score"],
+        }
+        for chunk in chunks
+    ]
+
+    latency_ms = (time.perf_counter() - start) * 1000
+
+    return {
+        "question": question,
+        "answer": answer_text,
+        "citations": citations,
+        "latency_ms": latency_ms,
+    }    
 
 
 # ─── Validation harness (provided — do not modify) ──────────────────────
 
 def validate_against(jsonl_path: Path) -> None:
     questions = [json.loads(line) for line in jsonl_path.read_text().splitlines() if line.strip()]
-    print(f"\n  Validating {len(questions)} questions from {jsonl_path.name}…\n")
+    print(f"\n  Validating {len
+                            (questions)} questions from {jsonl_path.name}…\n")
 
     hits = 0
     for q in questions:

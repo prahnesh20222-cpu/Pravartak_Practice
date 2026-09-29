@@ -1,0 +1,122 @@
+#####pre-defined qusstions#####
+Validation and design lessons from the Mini-RAG
+Basic RAG pipeline works end-to-end:
+Question → embedding → Qdrant similarity search → retrieved chunks → LLM → answer + citations.
+Semantic retrieval works well at the broad level:
+Queries generally retrieved the correct Sherlock story and semantically related sections.
+Similarity score is not the same as answer relevance:
+In the Red-Headed League question, the chunk containing the actual answer ranked third, despite having the lowest similarity among the returned chunks.
+→ A high similarity score does not guarantee that the chunk contains the answer.
+Top-k therefore matters:
+For the Vincent Spaulding question, the answer-bearing chunk The Identity of the Assistant ranked 4th.
+k=3 → chunk excluded → incomplete answer.
+k=4 → chunk included → LLM correctly identified Vincent Spaulding = John Clay.
+
+Chunking itself can distort retrieval:
+The original section-aware chunking accidentally included the section header as section content:
+
+The Death of Julia Stoner
+→ chunk text = "The Death of Julia Stoner"
+
+These title-only chunks were semantically attractive to the embedding model but contained no useful evidence.
+
+This became particularly harmful with small k:
+In the Speckled Band query, two of the three retrieved chunks were title-only chunks. They consumed retrieval slots and pushed useful content out of the top-3.
+
+Chunking was therefore redesigned:
+Section headers are now treated as metadata rather than content:
+
+header → current_lines = []
+
+rather than:
+
+header → current_lines = [header]
+
+And chunk_document() now skips sections with no actual content:
+
+if not section_text.strip():
+    continue
+The redesign reduced the corpus from 81 → 72 chunks:
+This indicates that 9 low-information/title-only chunks had been removed.
+The chunking redesign improved retrieval quality but did not solve everything:
+After the fix, the Speckled Band query returned three genuine content chunks rather than title-only chunks, but the key explanation was still ranked fourth.
+
+The Speckled Band experiment demonstrated the retrieval-window problem clearly:
+With k=3:
+
+Holmes Investigates             0.528
+Helen's Predicament             0.494
+The Death of Julia Stoner       0.490
+
+The actual answer-bearing The Explanation chunk was excluded.
+
+With k=4:
+
+The Explanation                0.478  ← critical evidence
+
+It entered the context and contained the complete mechanism: Roylott trained the snake, the snake used the bell-rope/ventilator, etc.
+
+The most important retrieval lesson:
+The answer-bearing chunk can have a lower embedding similarity score than chunks that are merely contextually related.
+Increasing k can improve recall, but isn't necessarily the ideal solution:
+k=4 solved this particular case, but increasing k indefinitely would introduce more irrelevant context and potentially increase LLM cost/noise.
+
+This motivates a two-stage retrieval architecture:
+
+Query
+  ↓
+Dense retrieval: top 10–20
+  ↓
+Reranker
+  ↓
+Select top 3–5
+  ↓
+LLM
+
+The key is that the reranker needs a larger candidate pool. A reranker applied only to the original top-3 cannot recover a fourth-ranked chunk that was never retrieved.
+
+There is also a grounding problem:
+In the Speckled Band k=3 test, the LLM supplied information about the swamp adder/Roylott even though the retrieved excerpts did not contain those facts. It even said they were "not mentioned in the excerpts but generally known."
+That violates the intended RAG contract:
+The system prompt explicitly says to use only the provided excerpts and say so if they don't contain the answer. This demonstrates that an LLM can fall back on pretrained knowledge even when instructed not to.
+The overall lesson
+
+The exercise has exposed three distinct layers of RAG quality:
+
+1. Chunking quality
+       ↓
+   Are the retrieval units meaningful?
+
+2. Retrieval quality
+       ↓
+   Does the candidate set contain the answer-bearing chunks?
+
+3. Generation / grounding
+       ↓
+   Does the LLM actually answer from those chunks?
+
+And your experiments have now produced concrete evidence for all three, rather than just demonstrating that "RAG works." That's exactly the kind of material that will make the final reflection much stronger.
+
+The corpus is fixed, the query is identical, and the retrieved sources are identical in all three runs:
+
+Holmes Investigates
+Helen's Predicament
+The Death of Julia Stoner
+
+Yet the generated answers differ noticeably.
+
+What is changing?
+
+The retrieval layer appears deterministic here. You're getting the same three chunks.
+
+The variability is therefore occurring primarily in the LLM generation stage.
+
+For example:
+
+Run 1 stays relatively cautious: it says the investigation "led Holmes to deduce" the weapon.
+Run 2 connects the snake to the room's ventilator and bell-rope.
+Run 3 goes further and says the ventilator was "a means for the snake to enter"—information that isn't actually present in the retrieved excerpts you showed earlier.
+
+So even with the same evidence, the LLM can produce different interpretations and different levels of inference.
+############
+
