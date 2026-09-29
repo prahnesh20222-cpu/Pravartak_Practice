@@ -178,6 +178,8 @@ class ChunkMetadata(BaseModel):
     document_id: str
     document_type: str
     source: str
+    file_name: str
+    file_path: str
 
     section: str
     section_path: list[str]
@@ -561,10 +563,12 @@ class MarkdownChunker:
                 metadata = ChunkMetadata(
                     document_id=document_id,
                     document_type=document_type,
-                    source=(
-                        document.metadata.source
-                        or Path(document.path).name
-                    ),
+                    # `source` comes from the Markdown YAML front matter.
+                    # It is a logical/provenance field and must NOT be replaced
+                    # by the physical file name.
+                    source=document.metadata.source or "",
+                    file_name=Path(document.path).name,
+                    file_path=str(Path(document.path).resolve()),
                     section=section.title,
                     section_path=section.heading_path,
 
