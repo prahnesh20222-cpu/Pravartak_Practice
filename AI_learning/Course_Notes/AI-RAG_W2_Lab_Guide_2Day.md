@@ -1,3 +1,34 @@
+---
+document_id: W2_Lab_Guide_2Day
+title: AI-RAG_W2_Lab_Guide_2Day
+document_version: 1
+
+source_type: practice_lab
+source_file:
+source: personal_notes
+
+session_type: practice
+course: Advanced Certificate Programme in Agentic AI and RAG Engineering
+session_date: 
+additional_session_dates:
+    
+language: en
+technical_depth: low_to_medium
+topics:
+  - Async
+  - Pydantic
+  - SQLite
+  - logging
+ 
+rag_ready: false
+
+source_url:
+retrieved_at:
+
+speaker_names_preserved: 
+transcript_cleaned: 
+---
+
 # Week 2 Lab — Async Batch Pipeline
 
 **Programme:** Agentic AI & RAG Engineering

@@ -5,7 +5,7 @@ source_type: class_notes
 session_type: live_session
 course: Advanced Certificate Programme in Agentic AI and RAG Engineering
 session_date: 2026-08-29
-Additional_session_date: 2026-09-05
+Additional_session_date:
 language: en
 technical_depth: low_to_medium
 rag_ready: false
@@ -19,7 +19,17 @@ imple_example2:
 topics: RAG, embedding, chunking, long-context
 additional_session_date: 2026-08-30
 ---
+
 ## Why does RAG matter
+<!-- section_metadata: 
+id: dg-ai-001
+topic: metadata management
+domain: data governance
+content_type: conceptual 
+importance: high 
+trust_score: 0.95 
+source_type: personal_analysis 
+-->
 - Why do we need RAG?
 - What are the available methods to get an answer for a question
 	- **Long-context**: We will provide the entire document to the LLM. This does not scale up

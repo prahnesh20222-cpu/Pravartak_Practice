@@ -1,0 +1,149 @@
+term,category,definition,context
+RAG,RAG,Retrieval-Augmented Generation: a pattern in which relevant external knowledge is retrieved and supplied to an LLM so that its response can be grounded in that knowledge.,Core capstone concept
+Agentic RAG,RAG,"RAG in which an agent or agent workflow can plan retrieval, choose retrieval tools or sources, reformulate queries, and synthesize evidence.",Capstone / course
+Retrieval,RAG,The process of finding potentially relevant information from a corpus in response to a query.,Capstone
+Semantic Retrieval,RAG,"Retrieval based on semantic similarity between a query and stored representations, rather than relying only on exact keyword matches.",Capstone
+Vector Search,RAG,Search over vector representations to find items that are mathematically close to a query vector.,Capstone / course
+Embedding,RAG,A numerical vector representation of text or another object that captures useful semantic characteristics for similarity-based search.,Capstone
+Embedding Model,RAG,A model that converts text or other inputs into vector representations.,Capstone
+Vector Database,RAG,"A database or index designed to store and search vector representations, usually together with the associated content and metadata.",Capstone
+ChromaDB,Tool,A vector database commonly used for storing embeddings and supporting vector similarity search.,Course / capstone
+Chunk,RAG,A semantically meaningful portion of a source document used as a unit for retrieval and downstream processing.,Capstone
+Chunking,RAG,The process of dividing a document into retrieval-sized pieces while trying to preserve useful semantic boundaries.,Capstone
+Semantic Chunking,RAG,"Chunking that uses meaning, topic or document structure as the primary boundary rather than cutting purely by character or token count.",Capstone
+Token,LLM,A unit of text processed by an LLM; token counts are used to reason about context limits and processing cost.,Capstone / course
+Context Window,LLM,The amount of tokenized input and output context an LLM can handle within a request or processing context.,Capstone / course
+Reranking,RAG,A second-stage retrieval step that reorders an initial set of retrieved candidates using a more precise relevance model or scoring method.,Capstone / course
+Hybrid Retrieval,RAG,"Retrieval that combines multiple retrieval mechanisms, commonly semantic/vector search with lexical or metadata-based search.",Capstone / course
+Metadata Filtering,RAG,"Restricting retrieval candidates using structured metadata such as source, topic, document type, date or authority.",Capstone
+Query Reformulation,RAG,Transforming an original user query into one or more retrieval-oriented queries to improve recall or relevance.,Course / capstone
+Multi-RAG,RAG,"An architecture that retrieves from multiple corpora or knowledge sources, potentially using routing to decide which sources to query.",Course / capstone
+Grounding,RAG,Constraining an LLM response using retrieved evidence or other authoritative context rather than relying only on model-internal knowledge.,Capstone / course
+Hallucination,LLM,"An LLM-generated statement that is unsupported, fabricated, or inconsistent with the available evidence.",Capstone / course
+Knowledge Drift,RAG,A change in the underlying knowledge over time that can make previously indexed or retrieved information stale.,Course / capstone
+Freshness,RAG,How current the information available to a retrieval system is relative to the source of truth or the intended use.,Capstone
+Specialised Retriever,RAG,"A retriever designed for a particular source, content type, query class or retrieval strategy.",Course
+RAG Corpus,Corpus,The collection of source material made available to the RAG system for retrieval.,Capstone
+Heterogeneous Corpus,Corpus,"A corpus containing multiple source formats or types, such as transcripts, PDFs, webpages, notes and slides.",Capstone
+Source Extraction,Document Processing,The deterministic or source-specific process of extracting content and structure from an original source.,Corpus strategy
+Structure Extraction,Document Processing,"Extraction of headings, paragraphs, lists, tables, timestamps, speakers and other structural elements before semantic enrichment.",Corpus strategy
+Semantic Enrichment,Document Processing,"LLM-assisted transformation that adds topics, concepts, entities, classifications and other controlled metadata while preserving source evidence.",Corpus strategy
+Canonical Markdown,Document Processing,A consistent Markdown representation used as the common intermediate format for heterogeneous source documents.,Corpus strategy
+YAML Front Matter,Document Processing,A YAML metadata block placed at the beginning of a Markdown document to store document-level metadata.,Capstone
+Transcript Cleaning,Document Processing,Removing transcription noise and improving readability while preserving the substantive meaning and provenance of the original conversation.,Zoom transcript strategy
+Zoom Transcript,Corpus,"A meeting transcript containing conversational content, often with speaker and timestamp information, used as a source for the RAG corpus.",Capstone
+Speaker Provenance,Provenance,Information identifying which speaker contributed a piece of transcript content.,Zoom transcript strategy
+Timestamp Provenance,Provenance,"The timestamp associated with transcript content, allowing retrieved information to be traced back to the original point in the recording or transcript.",Zoom transcript strategy
+Controlled Vocabulary,Metadata,A predefined set of permitted terms used to make classification and metadata values consistent.,Corpus strategy
+Glossary,Metadata,A managed collection of terms and definitions used as a shared vocabulary for the corpus and its semantic enrichment.,Capstone
+Topic Tagging,Metadata,"Assigning topic or subject labels to content to support organization, filtering and retrieval.",Corpus strategy
+Entity Extraction,Metadata,"Identifying named or meaningful entities in source content, such as technologies, organizations, people or concepts.",Corpus strategy
+Document ID,Metadata,A stable identifier for a source document that allows the document and its derived chunks or records to be linked.,Corpus strategy
+Chunk ID,Metadata,A stable identifier for an individual chunk derived from a source document.,Corpus strategy
+Metadata,Governance,"Structured information describing a document, chunk, entity or other data object, such as source, topic, owner, timestamp or document type.",Capstone
+Provenance,Governance,Information describing where a piece of information came from and how it relates to its source.,Capstone
+Epistemic Provenance,Governance,"Metadata describing the evidentiary basis and characteristics of knowledge, such as source authority, trust, freshness and supporting evidence.",Capstone
+Lineage,Governance,A record of relationships showing where data or derived content came from and how it moved or was transformed.,Capstone / data governance
+Trust Score,Governance,A score or classification intended to represent the perceived reliability or authority of a source or derived knowledge item.,Capstone
+Data Quality Score,Governance,A quantitative or categorical assessment of the quality of a data object or corpus item according to defined quality criteria.,Capstone
+Authority,Governance,An indication of how authoritative a source is for a particular subject or claim.,Capstone
+Source of Truth,Governance,"The designated authoritative source for a particular fact, data element or business concept.",Data governance discussions
+DataHub,Governance / Catalog,An open-source metadata platform considered as a catalog and governance layer for the RAG corpus and related AI assets.,Capstone
+Metadata Catalog,Governance / Catalog,"A system that stores and exposes metadata about data assets, documents, ownership, relationships and other governed objects.",Capstone
+Business Glossary,Governance,"A governed collection of business terms and their meanings, often linked to data assets and physical representations.",Data governance / capstone
+CDE,Governance,"Critical Data Element: a data element identified as especially important to a business process, reporting, risk, compliance or other organizational objective.",Data governance discussions
+Data Quality (DQ),Governance,The discipline and set of measures used to assess whether data is fit for its intended purpose.,Data governance / capstone
+Semantic Quality,Governance,The degree to which retrieved or enriched content preserves the intended meaning and relationships of the source.,Capstone
+Lifecycle,Governance,"The managed stages through which a document, chunk, metadata record or AI asset progresses, such as creation, enrichment, use, review and retirement.",Capstone / governance
+Graph Database,Knowledge Graph,A database optimized for representing entities and relationships and traversing those relationships.,Capstone
+Knowledge Graph,Knowledge Graph,"A graph-based representation of entities, concepts and relationships that makes explicit how pieces of knowledge are connected.",Capstone
+GraphRAG,Knowledge Graph,A RAG approach that uses graph-structured knowledge or relationships alongside retrieval to answer questions requiring connected concepts or multi-hop relationships.,Capstone
+Relationship,Knowledge Graph,A typed connection between two entities or concepts in a graph.,Capstone
+Concept Graph,Knowledge Graph,A graph representing relationships among concepts extracted from or associated with source material.,Capstone
+Multi-hop Retrieval,Knowledge Graph,Retrieval that follows multiple relationships or steps to assemble evidence needed for a query.,Capstone
+Knowledge Layer,Architecture,"A governed layer containing searchable content, metadata, relationships and other structured knowledge that agents can access.",Capstone architecture
+Deterministic Memory,Memory,A memory approach in which information is stored and retrieved according to explicit structures and rules rather than being reconstructed solely by an LLM.,Capstone
+LLM,LLM,Large Language Model: a model trained on large text corpora to perform language understanding and generation tasks.,Capstone
+Qwen3 4B,Model,A relatively small Qwen language model used in the capstone as a local model for bounded semantic enrichment and classification tasks.,Corpus strategy
+Local LLM,Model,A language model executed locally rather than through a remote hosted inference service.,Capstone
+Bounded Enrichment,LLM,"A constrained LLM task with a defined output purpose and scope, such as classification, tagging or entity extraction.",Corpus strategy
+Asynchronous Enrichment,LLM / Processing,"Non-real-time LLM enrichment performed independently of an interactive user request, allowing processing to be batched and monitored.",Corpus strategy
+Confidence Threshold,LLM / Reliability,A predefined confidence level used to decide whether an automated model output can be accepted or should be reviewed or escalated.,Corpus strategy
+Escalation Path,Reliability,"A workflow that routes uncertain, failed or high-risk cases from a smaller or automated model to human review or a stronger model.",Corpus strategy
+Schema Validation,Reliability,Checking model or program output against a predefined structure and allowed fields or values.,Capstone / course
+Structured Output,LLM,"Model output constrained to a predefined structure, often JSON or a typed schema, so downstream software can process it reliably.",Capstone / course
+Prompt,LLM,The instructions and contextual input supplied to an LLM for a task.,Course / capstone
+Prompt Chaining,LLM,Breaking a larger task into multiple model calls whose outputs are passed between steps.,Course
+Few-shot Prompting,LLM,Providing examples in a prompt to demonstrate the expected behavior or output format.,Course
+Critic-Creator Loop,LLM,A workflow in which one model step generates an output and another step critiques or evaluates it before refinement.,Course
+Self-Refine,LLM,An iterative pattern where a model evaluates and improves its own generated output using explicit feedback or criteria.,Course
+Guardrail,Reliability,"A rule, validator or control designed to constrain model behavior or prevent unsafe, invalid or unwanted outputs.",Course / capstone
+AI Agent,Agents,"A software system that uses an LLM or other reasoning component to decide actions, use tools, manage state and pursue a defined objective.",Course / capstone
+Agentic AI,Agents,"AI systems designed to perform multi-step tasks with some degree of planning, reasoning, tool use and autonomous execution.",Course / capstone
+Agent Workflow,Agents,"The sequence of reasoning, retrieval, tool use, state changes and other steps through which an agent performs a task.",Course
+Orchestrator,Agents,"A component that coordinates multiple steps, tools or agents and controls how work moves through a workflow.",Capstone / course
+Orchestrator-Worker,Agents,An architecture in which an orchestrator delegates tasks to specialized worker components and aggregates their results.,Course
+Router,Agents,"A component that classifies an input and selects an appropriate downstream path, tool, retriever or agent.",Course
+Planner-Executor,Agents,An agent pattern in which planning and execution are separated so a plan can be generated and then carried out through tools or workers.,Course
+Evaluator-Optimizer,Agents,A workflow in which an evaluator scores an output and an optimizer uses the evaluation to improve it.,Course
+Supervisor Agent,Agents,"An agent that coordinates other agents, assigns work and handles escalation or synthesis.",Course
+Multi-Agent System,Agents,A system in which multiple specialized agents cooperate or coordinate to solve a larger task.,Course / capstone
+Human-in-the-Loop,Agents / Governance,"A design pattern in which a human reviews, approves, corrects or takes over specific automated decisions or actions.",Course / capstone
+Tool Use,Agents,"An agent capability in which the model selects and invokes external functions, APIs, databases or services.",Course / capstone
+Function Calling,Agents,A mechanism through which an LLM produces structured arguments for a predefined function or tool invocation.,Course
+MCP,Agents / Integration,Model Context Protocol: a protocol pattern for exposing tools and contextual resources to AI models and agents through standardized interfaces.,Course / capstone
+Tool Mesh,Agents,An architecture in which agents can access a network of shared tools or services through standardized interfaces.,Course
+State,Agents / Memory,Information maintained across workflow steps so an agent or orchestrator can track task progress and context.,Course
+Memory,Agents,Persisted or temporary information used by an agent beyond the immediate prompt context.,Course / capstone
+Semantic Memory,Memory,"Memory representing general knowledge, concepts or facts that can be reused across sessions or tasks.",Course
+Episodic Memory,Memory,Memory representing experiences or events associated with particular interactions or episodes.,Course
+Procedural Memory,Memory,"Memory representing how to perform tasks, procedures or workflows.",Course
+Session Stitching,Memory,Connecting information across multiple interactions or sessions so context can persist over time.,Course
+Python,Python,"The programming language used for the capstone implementation, AI workflows, data processing and supporting services.",Capstone / course
+Async / Asynchronous Programming,Python,A programming model that allows a program to initiate work that may wait for I/O without blocking other eligible work from progressing.,Python learning
+asyncio,Python,"Python's standard library framework for writing asynchronous, concurrent I/O-oriented code using async/await.",Python learning
+async,Python,A Python keyword used to define an asynchronous function or coroutine.,Python learning
+await,Python,A Python keyword used inside asynchronous code to suspend execution until an awaitable operation completes.,Python learning
+Coroutine,Python,An asynchronous computation represented by a Python function defined with async def that can suspend at await points.,Python learning
+FastAPI,Python / API,"A Python web framework used to build APIs, including lightweight services around AI or agent workflows.",Capstone / course
+Uvicorn,Python / Deployment,An ASGI server commonly used to run Python web applications such as FastAPI services.,Capstone / Python
+ASGI,Python / API,Asynchronous Server Gateway Interface: a Python interface for asynchronous web servers and applications.,Python / FastAPI
+Pydantic,Python / Validation,A Python library for defining typed data models and validating structured data.,Capstone / course
+Pydantic Model,Python / Validation,A typed schema defined with Pydantic that validates and structures input or output data.,Capstone / course
+pytest,Python / Testing,A Python testing framework used to write and run automated unit and integration tests.,Capstone / course
+API,Integration,Application Programming Interface: a defined interface through which software components communicate or request capabilities or data.,Capstone
+REST,Integration,"An architectural style commonly used for web APIs using resources, HTTP methods and stateless requests.",Course
+GraphQL,Integration,An API query language and runtime that allows clients to request structured data through a typed schema.,Course
+CRUD,Data / Application,"Create, Read, Update and Delete: the basic operations commonly supported by data-oriented applications and APIs.",Course
+SQL,Data / Application,Structured Query Language used to query and manipulate relational data.,Capstone / course
+Text-to-SQL,Agents / Data,A pattern in which natural-language requests are translated into SQL queries for structured data retrieval.,Course / capstone
+Exception Handling,Python,"Techniques for detecting, catching and managing runtime errors so applications can fail safely or recover.",Python / course
+Retry,Reliability,"Repeating a failed operation according to defined rules, often with limits or delays.",Course / capstone
+Timeout,Reliability,A maximum permitted duration for an operation before it is treated as failed or abandoned.,Course
+Rate Limit,Reliability,"A restriction on how frequently an API, model or service can be called within a period.",Course / capstone
+Idempotency,Reliability,A property whereby repeating the same operation produces the same intended end state as performing it once.,Course
+RAG Evaluation,Evaluation,Systematic measurement of retrieval and generation quality against defined evaluation criteria and datasets.,Capstone / course
+RAGAS,Evaluation,A framework used to evaluate RAG systems using metrics for aspects such as retrieval and answer quality.,Course
+Golden Dataset,Evaluation,A curated reference dataset containing expected or trusted examples used to evaluate system behavior.,Course
+Synthetic Evaluation Data,Evaluation,Evaluation examples generated programmatically or with models rather than collected solely from real user interactions.,Course
+Step-wise Evaluation,Evaluation,"Evaluation of individual stages of an AI workflow, such as retrieval, tool selection or synthesis, rather than only the final answer.",Course
+Outcome Evaluation,Evaluation,Evaluation focused on whether the final system output achieves the desired result.,Course
+Cost-Quality Trade-off,Evaluation,"The relationship between system quality and the computational, model, latency or operational cost required to achieve it.",Course / capstone
+Observability,Operations,"The ability to understand system behavior through traces, logs, metrics and other operational signals.",Operations / course
+Tracing,Operations,Recording the sequence and timing of operations through a workflow so execution can be inspected and diagnosed.,Course
+Logging,Operations,"Recording structured or textual events produced by an application for debugging, auditing and operational analysis.",Python / capstone
+Metrics,Operations,"Quantitative measurements of system behavior such as latency, errors, token usage or retrieval performance.",Course
+Token Usage Monitoring,Operations,"Tracking input and output token consumption to understand cost, capacity and model behavior.",Course
+Prompt Injection,Security,An attack or failure mode in which untrusted input attempts to manipulate an LLM into ignoring intended instructions or performing unintended actions.,Course
+PII,Security / Governance,Personally Identifiable Information: information that can identify or reasonably be linked to an individual.,Course / governance
+Red Teaming,Security / Evaluation,"Adversarial testing intended to discover weaknesses, unsafe behavior or failure modes in an AI system.",Course
+CI/CD,Deployment,"Continuous Integration and Continuous Delivery/Deployment: automated practices for building, testing and releasing software.",Course
+Blue-Green Deployment,Deployment,A deployment strategy that maintains two environments so traffic can be shifted between an existing version and a new version with controlled rollback.,Course
+Rollback,Deployment,Returning a deployed system to a previous known version after a problematic release.,Course
+Containerisation,Deployment,Packaging an application and its dependencies into a portable container image for consistent deployment.,Course
+Docker,Deployment,A platform and tooling ecosystem for building and running containerized applications.,Course / capstone
+LangChain,Tool,"A framework used to build LLM applications and workflows, including chains, tools and retrieval components.",Course / capstone
+LlamaIndex,Tool,"A framework focused on connecting LLM applications with external data, indexing and retrieval workflows.",Course
+LangGraph,Tool,"A framework for building stateful, graph-based agent workflows and multi-step orchestration.",Course
+CrewAI,Tool,A framework for orchestrating multiple specialized AI agents working together on tasks.,Course
+Marker,Tool,A document-processing tool discussed for extracting PDF structure into Markdown or other structured representations.,Corpus strategy
